@@ -48,6 +48,15 @@ const FitBounds = ({ pickup, dropoff }: { pickup: [number, number]; dropoff: [nu
   return null;
 };
 
+// Re-center map on pickup location
+const RecenterMap = ({ center }: { center: [number, number] }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, 15);
+  }, [map, center]);
+  return null;
+};
+
 // Animated searching pulse
 const SearchingPulse = ({ position }: { position: [number, number] }) => {
   return (
