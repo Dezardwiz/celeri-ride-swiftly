@@ -28,6 +28,7 @@ const Index = () => {
   const [screen, setScreen] = useState<AppScreen>("home");
   const [activeTab, setActiveTab] = useState<"home" | "history" | "profile">("home");
   const [destination, setDestination] = useState<string>("");
+  const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
