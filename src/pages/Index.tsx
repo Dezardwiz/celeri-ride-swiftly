@@ -78,6 +78,7 @@ const Index = () => {
   const handleReset = useCallback(() => {
     setScreen("home");
     setDestination("");
+    setDropoffCoords(null);
     setActiveTab("home");
   }, []);
 
