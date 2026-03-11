@@ -28,7 +28,23 @@ const Index = () => {
   const [screen, setScreen] = useState<AppScreen>("home");
   const [activeTab, setActiveTab] = useState<"home" | "history" | "profile">("home");
   const [destination, setDestination] = useState<string>("");
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Get real user geolocation
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      () => {
+        // Fallback to Manaus center
+        setUserLocation({ lat: -3.119, lng: -60.022 });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
 
   const handleDestinationSelect = useCallback((dest: string) => {
     setDestination(dest);
