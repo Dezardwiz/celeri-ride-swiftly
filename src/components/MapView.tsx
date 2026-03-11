@@ -111,7 +111,9 @@ const MapView = ({
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
-
+        
+        {/* Re-center on user location when not showing route */}
+        {!showRoute && <RecenterMap center={pickup} />}
         {/* Pickup marker */}
         <Marker position={pickup} icon={pickupIcon} />
 
