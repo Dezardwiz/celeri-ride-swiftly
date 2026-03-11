@@ -98,9 +98,9 @@ const Index = () => {
       <MapView
         showRoute={showRoute}
         searching={isSearching}
-        driverLocation={showDriver ? { lat: -3.115, lng: -60.018 } : undefined}
-        pickupLocation={{ lat: -3.119, lng: -60.022 }}
-        dropoffLocation={{ lat: -3.095, lng: -60.005 }}
+        driverLocation={showDriver ? { lat: (userLocation?.lat ?? -3.119) + 0.004, lng: (userLocation?.lng ?? -60.022) + 0.004 } : undefined}
+        pickupLocation={userLocation ?? { lat: -3.119, lng: -60.022 }}
+        dropoffLocation={{ lat: (userLocation?.lat ?? -3.119) + 0.024, lng: (userLocation?.lng ?? -60.022) + 0.017 }}
       />
 
       {/* Logo */}
