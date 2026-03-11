@@ -28,6 +28,7 @@ const Index = () => {
   const [screen, setScreen] = useState<AppScreen>("home");
   const [activeTab, setActiveTab] = useState<"home" | "history" | "profile">("home");
   const [destination, setDestination] = useState<string>("");
+  const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -46,8 +47,9 @@ const Index = () => {
     );
   }, []);
 
-  const handleDestinationSelect = useCallback((dest: string) => {
+  const handleDestinationSelect = useCallback((dest: string, coords?: { lat: number; lng: number }) => {
     setDestination(dest);
+    if (coords) setDropoffCoords(coords);
     setScreen("confirm");
   }, []);
 
@@ -76,6 +78,7 @@ const Index = () => {
   const handleReset = useCallback(() => {
     setScreen("home");
     setDestination("");
+    setDropoffCoords(null);
     setActiveTab("home");
   }, []);
 
@@ -100,7 +103,7 @@ const Index = () => {
         searching={isSearching}
         driverLocation={showDriver ? { lat: (userLocation?.lat ?? -3.119) + 0.004, lng: (userLocation?.lng ?? -60.022) + 0.004 } : undefined}
         pickupLocation={userLocation ?? { lat: -3.119, lng: -60.022 }}
-        dropoffLocation={{ lat: (userLocation?.lat ?? -3.119) + 0.024, lng: (userLocation?.lng ?? -60.022) + 0.017 }}
+        dropoffLocation={dropoffCoords ?? { lat: (userLocation?.lat ?? -3.119) + 0.024, lng: (userLocation?.lng ?? -60.022) + 0.017 }}
       />
 
       {/* Logo */}
@@ -121,6 +124,7 @@ const Index = () => {
             key="search"
             onBack={() => setScreen("home")}
             onSelect={handleDestinationSelect}
+            userLocation={userLocation}
           />
         )}
 
