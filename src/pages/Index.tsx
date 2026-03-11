@@ -124,6 +124,7 @@ const Index = () => {
             key="search"
             onBack={() => setScreen("home")}
             onSelect={handleDestinationSelect}
+            userLocation={userLocation}
           />
         )}
 
