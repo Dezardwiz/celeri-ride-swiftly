@@ -82,7 +82,9 @@ const Index = () => {
       <MapView
         showRoute={showRoute}
         searching={isSearching}
-        driverLocation={showDriver ? { x: 55, y: 38 } : undefined}
+        driverLocation={showDriver ? { lat: -3.115, lng: -60.018 } : undefined}
+        pickupLocation={{ lat: -3.119, lng: -60.022 }}
+        dropoffLocation={{ lat: -3.095, lng: -60.005 }}
       />
 
       {/* Logo */}
