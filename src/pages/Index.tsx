@@ -103,7 +103,7 @@ const Index = () => {
         searching={isSearching}
         driverLocation={showDriver ? { lat: (userLocation?.lat ?? -3.119) + 0.004, lng: (userLocation?.lng ?? -60.022) + 0.004 } : undefined}
         pickupLocation={userLocation ?? { lat: -3.119, lng: -60.022 }}
-        dropoffLocation={{ lat: (userLocation?.lat ?? -3.119) + 0.024, lng: (userLocation?.lng ?? -60.022) + 0.017 }}
+        dropoffLocation={dropoffCoords ?? { lat: (userLocation?.lat ?? -3.119) + 0.024, lng: (userLocation?.lng ?? -60.022) + 0.017 }}
       />
 
       {/* Logo */}
