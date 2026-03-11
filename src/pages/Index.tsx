@@ -47,8 +47,9 @@ const Index = () => {
     );
   }, []);
 
-  const handleDestinationSelect = useCallback((dest: string) => {
+  const handleDestinationSelect = useCallback((dest: string, coords?: { lat: number; lng: number }) => {
     setDestination(dest);
+    if (coords) setDropoffCoords(coords);
     setScreen("confirm");
   }, []);
 
