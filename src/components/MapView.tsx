@@ -48,6 +48,15 @@ const FitBounds = ({ pickup, dropoff }: { pickup: [number, number]; dropoff: [nu
   return null;
 };
 
+// Re-center map on pickup location
+const RecenterMap = ({ center }: { center: [number, number] }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, 15);
+  }, [map, center]);
+  return null;
+};
+
 // Animated searching pulse
 const SearchingPulse = ({ position }: { position: [number, number] }) => {
   return (
@@ -102,7 +111,9 @@ const MapView = ({
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
-
+        
+        {/* Re-center on user location when not showing route */}
+        {!showRoute && <RecenterMap center={pickup} />}
         {/* Pickup marker */}
         <Marker position={pickup} icon={pickupIcon} />
 

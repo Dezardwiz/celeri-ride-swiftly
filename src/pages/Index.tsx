@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import MapView from "@/components/MapView";
@@ -28,7 +28,23 @@ const Index = () => {
   const [screen, setScreen] = useState<AppScreen>("home");
   const [activeTab, setActiveTab] = useState<"home" | "history" | "profile">("home");
   const [destination, setDestination] = useState<string>("");
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Get real user geolocation
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      () => {
+        // Fallback to Manaus center
+        setUserLocation({ lat: -3.119, lng: -60.022 });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
 
   const handleDestinationSelect = useCallback((dest: string) => {
     setDestination(dest);
@@ -82,9 +98,9 @@ const Index = () => {
       <MapView
         showRoute={showRoute}
         searching={isSearching}
-        driverLocation={showDriver ? { lat: -3.115, lng: -60.018 } : undefined}
-        pickupLocation={{ lat: -3.119, lng: -60.022 }}
-        dropoffLocation={{ lat: -3.095, lng: -60.005 }}
+        driverLocation={showDriver ? { lat: (userLocation?.lat ?? -3.119) + 0.004, lng: (userLocation?.lng ?? -60.022) + 0.004 } : undefined}
+        pickupLocation={userLocation ?? { lat: -3.119, lng: -60.022 }}
+        dropoffLocation={{ lat: (userLocation?.lat ?? -3.119) + 0.024, lng: (userLocation?.lng ?? -60.022) + 0.017 }}
       />
 
       {/* Logo */}
