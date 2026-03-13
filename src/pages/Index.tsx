@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import MapView from "@/components/MapView";
@@ -10,6 +10,8 @@ import RideStatusCard from "@/components/RideStatusCard";
 import RideComplete from "@/components/RideComplete";
 import HistoryScreen from "@/components/HistoryScreen";
 import ProfileScreen from "@/components/ProfileScreen";
+import { useRide, useActiveTariff, calculatePrice } from "@/hooks/useRide";
+import { toast } from "sonner";
 
 type AppScreen =
   | "home"
@@ -24,25 +26,37 @@ type AppScreen =
 
 const rideStatusFlow: AppScreen[] = ["accepted", "arriving", "arrived", "in_progress"];
 
+// Haversine distance in km
+function haversine(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const R = 6371;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const x =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+}
+
 const Index = () => {
   const [screen, setScreen] = useState<AppScreen>("home");
   const [activeTab, setActiveTab] = useState<"home" | "history" | "profile">("home");
-  const [destination, setDestination] = useState<string>("");
+  const [destination, setDestination] = useState("");
   const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Get real user geolocation
+  const tariff = useActiveTariff();
+  const ride = useRide();
+
+  // Estimated values
+  const distanceKm = userLocation && dropoffCoords ? haversine(userLocation, dropoffCoords) * 1.3 : 0; // 1.3 road factor
+  const durationMin = Math.max(Math.round((distanceKm / 30) * 60), 1); // ~30km/h avg
+  const price = calculatePrice(tariff, distanceKm, durationMin);
+
   useEffect(() => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-      },
-      () => {
-        // Fallback to Manaus center
-        setUserLocation({ lat: -3.119, lng: -60.022 });
-      },
+      (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => setUserLocation({ lat: -3.119, lng: -60.022 }),
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }, []);
@@ -53,34 +67,54 @@ const Index = () => {
     setScreen("confirm");
   }, []);
 
-  const handleConfirmRide = useCallback(() => {
-    setScreen("searching");
-  }, []);
+  const handleConfirmRide = useCallback(async () => {
+    if (!userLocation || !dropoffCoords) return;
+    const created = await ride.createRide({
+      originAddress: "Sua localização",
+      originLat: userLocation.lat,
+      originLng: userLocation.lng,
+      destinationAddress: destination,
+      destinationLat: dropoffCoords.lat,
+      destinationLng: dropoffCoords.lng,
+      estimatedDistanceKm: parseFloat(distanceKm.toFixed(2)),
+      estimatedDurationMin: durationMin,
+      estimatedPrice: parseFloat(price.toFixed(2)),
+    });
+    if (created) {
+      setScreen("searching");
+      toast.success("Corrida solicitada!");
+    } else {
+      toast.error("Erro ao solicitar corrida");
+    }
+  }, [userLocation, dropoffCoords, destination, distanceKm, durationMin, price, ride]);
 
-  const handleDriverFound = useCallback(() => {
-    setScreen("accepted");
-  }, []);
+  const handleDriverFound = useCallback(() => setScreen("accepted"), []);
 
   const handleAdvanceStatus = useCallback(() => {
     setScreen((prev) => {
       const idx = rideStatusFlow.indexOf(prev);
-      if (idx >= 0 && idx < rideStatusFlow.length - 1) {
-        return rideStatusFlow[idx + 1];
-      }
-      return prev;
+      return idx >= 0 && idx < rideStatusFlow.length - 1 ? rideStatusFlow[idx + 1] : prev;
     });
   }, []);
 
-  const handleCompleteRide = useCallback(() => {
-    setScreen("complete");
-  }, []);
+  const handleCompleteRide = useCallback(() => setScreen("complete"), []);
+
+  const handleRideSubmit = useCallback(
+    async (payment: "pix" | "card" | "cash", rating: number) => {
+      await ride.completeRide(parseFloat(price.toFixed(2)));
+      await ride.savePayment(payment, parseFloat(price.toFixed(2)));
+      if (rating > 0) await ride.saveRating(rating);
+    },
+    [ride, price]
+  );
 
   const handleReset = useCallback(() => {
     setScreen("home");
     setDestination("");
     setDropoffCoords(null);
     setActiveTab("home");
-  }, []);
+    ride.resetRide();
+  }, [ride]);
 
   const handleTabChange = useCallback((tab: "home" | "history" | "profile") => {
     setActiveTab(tab);
@@ -97,7 +131,6 @@ const Index = () => {
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-background">
-      {/* Map */}
       <MapView
         showRoute={showRoute}
         searching={isSearching}
@@ -106,66 +139,50 @@ const Index = () => {
         dropoffLocation={dropoffCoords ?? { lat: (userLocation?.lat ?? -3.119) + 0.024, lng: (userLocation?.lng ?? -60.022) + 0.017 }}
       />
 
-      {/* Logo */}
       <div className="absolute left-4 top-4 z-30">
-        <h1 className="font-display text-2xl font-bold uppercase tracking-widest text-foreground">
-          CELERI
-        </h1>
+        <h1 className="font-display text-2xl font-bold uppercase tracking-widest text-foreground">CELERI</h1>
       </div>
 
-      {/* Main screens */}
       <AnimatePresence mode="wait">
         {screen === "home" && activeTab === "home" && (
           <WhereToInput key="where-to" onFocus={() => setScreen("search")} />
         )}
-
         {screen === "search" && (
-          <DestinationSearch
-            key="search"
-            onBack={() => setScreen("home")}
-            onSelect={handleDestinationSelect}
-            userLocation={userLocation}
-          />
+          <DestinationSearch key="search" onBack={() => setScreen("home")} onSelect={handleDestinationSelect} userLocation={userLocation} />
         )}
-
         {screen === "confirm" && (
           <RideConfirmCard
             key="confirm"
             destination={destination}
+            estimatedPrice={price}
+            estimatedTime={durationMin}
+            estimatedDistance={distanceKm}
+            loading={ride.loading}
             onConfirm={handleConfirmRide}
             onCancel={handleReset}
           />
         )}
-
-        {screen === "searching" && (
-          <SearchingDriver key="searching" onFound={handleDriverFound} />
-        )}
-
+        {screen === "searching" && <SearchingDriver key="searching" onFound={handleDriverFound} />}
         {(screen === "accepted" || screen === "arriving" || screen === "arrived" || screen === "in_progress") && (
-          <RideStatusCard
-            key="ride-status"
-            status={screen}
-            onAdvance={handleAdvanceStatus}
-            onComplete={handleCompleteRide}
+          <RideStatusCard key="ride-status" status={screen} onAdvance={handleAdvanceStatus} onComplete={handleCompleteRide} />
+        )}
+        {screen === "complete" && (
+          <RideComplete
+            key="complete"
+            price={price}
+            distanceKm={distanceKm}
+            durationMin={durationMin}
+            onSubmit={handleRideSubmit}
+            onClose={handleReset}
           />
         )}
-
-        {screen === "complete" && (
-          <RideComplete key="complete" onClose={handleReset} />
-        )}
       </AnimatePresence>
 
-      {/* Overlay screens */}
       <AnimatePresence>
-        {activeTab === "history" && (
-          <HistoryScreen key="history" onBack={() => setActiveTab("home")} />
-        )}
-        {activeTab === "profile" && (
-          <ProfileScreen key="profile" onBack={() => setActiveTab("home")} />
-        )}
+        {activeTab === "history" && <HistoryScreen key="history" onBack={() => setActiveTab("home")} />}
+        {activeTab === "profile" && <ProfileScreen key="profile" onBack={() => setActiveTab("home")} />}
       </AnimatePresence>
 
-      {/* Bottom Nav */}
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
     </div>
   );
