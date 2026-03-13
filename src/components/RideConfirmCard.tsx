@@ -1,16 +1,28 @@
-import { Clock, MapPin, Bike } from "lucide-react";
+import { Clock, MapPin, Bike, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface RideConfirmCardProps {
   destination: string;
+  estimatedPrice: number;
+  estimatedTime: number;
+  estimatedDistance: number;
+  loading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-const RideConfirmCard = ({ destination, onConfirm, onCancel }: RideConfirmCardProps) => {
-  const estimatedPrice = "R$ 12,50";
-  const estimatedTime = "8 min";
-  const estimatedDistance = "3.2 km";
+const RideConfirmCard = ({
+  destination,
+  estimatedPrice,
+  estimatedTime,
+  estimatedDistance,
+  loading,
+  onConfirm,
+  onCancel,
+}: RideConfirmCardProps) => {
+  const priceStr = `R$ ${estimatedPrice.toFixed(2).replace(".", ",")}`;
+  const timeStr = `${estimatedTime} min`;
+  const distStr = `${estimatedDistance.toFixed(1)} km`;
 
   return (
     <motion.div
@@ -21,13 +33,11 @@ const RideConfirmCard = ({ destination, onConfirm, onCancel }: RideConfirmCardPr
       className="absolute bottom-20 left-0 right-0 z-40 px-4"
     >
       <div className="rounded-lg border border-border bg-card p-4 space-y-4">
-        {/* Destination info */}
         <div className="flex items-center gap-3">
           <MapPin size={16} className="text-primary flex-shrink-0" />
           <span className="text-sm font-medium text-foreground truncate">{destination}</span>
         </div>
 
-        {/* Stats row */}
         <div className="flex items-center justify-between border-t border-b border-border py-3">
           <div className="flex items-center gap-2">
             <Bike size={16} className="text-muted-foreground" />
@@ -36,19 +46,17 @@ const RideConfirmCard = ({ destination, onConfirm, onCancel }: RideConfirmCardPr
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
               <Clock size={12} className="text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">{estimatedTime}</span>
+              <span className="text-xs text-muted-foreground">{timeStr}</span>
             </div>
-            <span className="text-xs text-muted-foreground">{estimatedDistance}</span>
+            <span className="text-xs text-muted-foreground">{distStr}</span>
           </div>
         </div>
 
-        {/* Price */}
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Valor estimado</span>
-          <span className="font-display text-xl tracking-tight text-foreground">{estimatedPrice}</span>
+          <span className="font-display text-xl tracking-tight text-foreground">{priceStr}</span>
         </div>
 
-        {/* Actions */}
         <div className="flex gap-3">
           <button
             onClick={onCancel}
@@ -58,9 +66,10 @@ const RideConfirmCard = ({ destination, onConfirm, onCancel }: RideConfirmCardPr
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 rounded-md bg-primary py-3 font-display text-sm uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary/90"
+            disabled={loading}
+            className="flex-1 rounded-md bg-primary py-3 font-display text-sm uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
           >
-            Confirmar Corrida
+            {loading ? <Loader2 size={16} className="mx-auto animate-spin" /> : "Confirmar Corrida"}
           </button>
         </div>
       </div>

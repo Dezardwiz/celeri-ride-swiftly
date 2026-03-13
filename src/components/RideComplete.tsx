@@ -3,24 +3,31 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 
 interface RideCompleteProps {
+  price: number;
+  distanceKm: number;
+  durationMin: number;
+  onSubmit: (payment: "pix" | "card" | "cash", rating: number) => void;
   onClose: () => void;
 }
 
-const RideComplete = ({ onClose }: RideCompleteProps) => {
+const RideComplete = ({ price, distanceKm, durationMin, onSubmit, onClose }: RideCompleteProps) => {
   const [rating, setRating] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState<string>("pix");
+  const [paymentMethod, setPaymentMethod] = useState<"pix" | "card" | "cash">("pix");
   const [submitted, setSubmitted] = useState(false);
 
   const payments = [
-    { id: "pix", label: "PIX", icon: QrCode },
-    { id: "card", label: "CARTÃO", icon: CreditCard },
-    { id: "cash", label: "DINHEIRO", icon: DollarSign },
+    { id: "pix" as const, label: "PIX", icon: QrCode },
+    { id: "card" as const, label: "CARTÃO", icon: CreditCard },
+    { id: "cash" as const, label: "DINHEIRO", icon: DollarSign },
   ];
 
   const handleSubmit = () => {
+    onSubmit(paymentMethod, rating);
     setSubmitted(true);
     setTimeout(onClose, 1500);
   };
+
+  const priceStr = `R$ ${price.toFixed(2).replace(".", ",")}`;
 
   return (
     <motion.div
@@ -50,37 +57,28 @@ const RideComplete = ({ onClose }: RideCompleteProps) => {
           </motion.div>
         ) : (
           <>
-            {/* Header */}
             <div className="flex items-center justify-between">
-              <h3 className="font-display text-lg uppercase tracking-wider text-foreground">
-                Corrida Finalizada
-              </h3>
-              <button onClick={onClose} className="text-muted-foreground p-1">
-                <X size={18} />
-              </button>
+              <h3 className="font-display text-lg uppercase tracking-wider text-foreground">Corrida Finalizada</h3>
+              <button onClick={onClose} className="text-muted-foreground p-1"><X size={18} /></button>
             </div>
 
-            {/* Ride summary */}
             <div className="rounded-md bg-input p-4 space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Distância</span>
-                <span className="text-sm text-foreground">3.2 km</span>
+                <span className="text-sm text-foreground">{distanceKm.toFixed(1)} km</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Duração</span>
-                <span className="text-sm text-foreground">8 min</span>
+                <span className="text-sm text-foreground">{durationMin} min</span>
               </div>
               <div className="flex justify-between border-t border-border pt-2">
                 <span className="text-sm font-medium text-foreground">Total</span>
-                <span className="font-display text-xl tracking-tight text-foreground">R$ 12,50</span>
+                <span className="font-display text-xl tracking-tight text-foreground">{priceStr}</span>
               </div>
             </div>
 
-            {/* Payment */}
             <div className="space-y-2">
-              <span className="font-display text-xs uppercase tracking-wider text-muted-foreground">
-                Pagamento
-              </span>
+              <span className="font-display text-xs uppercase tracking-wider text-muted-foreground">Pagamento</span>
               <div className="flex gap-2">
                 {payments.map((p) => (
                   <button
@@ -99,26 +97,20 @@ const RideComplete = ({ onClose }: RideCompleteProps) => {
               </div>
             </div>
 
-            {/* Rating */}
             <div className="space-y-2">
-              <span className="font-display text-xs uppercase tracking-wider text-muted-foreground">
-                Avalie o mototaxista
-              </span>
+              <span className="font-display text-xs uppercase tracking-wider text-muted-foreground">Avalie o mototaxista</span>
               <div className="flex justify-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button key={star} onClick={() => setRating(star)} className="p-1">
                     <Star
                       size={28}
-                      className={`transition-colors ${
-                        star <= rating ? "text-warning fill-warning" : "text-muted-foreground"
-                      }`}
+                      className={`transition-colors ${star <= rating ? "text-warning fill-warning" : "text-muted-foreground"}`}
                     />
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Submit */}
             <button
               onClick={handleSubmit}
               disabled={rating === 0}
