@@ -57,7 +57,7 @@ const Index = () => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => setUserLocation({ lat: -3.119, lng: -60.022 }),
+      () => setUserLocation(MONTES_CLAROS.center),
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }, []);
