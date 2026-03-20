@@ -53,21 +53,22 @@ const DestinationSearch = ({ onBack, onSelect, userLocation }: DestinationSearch
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const viewbox = userLocation
-          ? `&viewbox=${userLocation.lng - 0.15},${userLocation.lat + 0.15},${userLocation.lng + 0.15},${userLocation.lat - 0.15}&bounded=1`
-          : "";
+        const { bounds } = MONTES_CLAROS;
+        const viewbox = `&viewbox=${bounds.west},${bounds.north},${bounds.east},${bounds.south}&bounded=1`;
         const res = await fetch(
           `${NOMINATIM_URL}?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=8&countrycodes=br${viewbox}`,
           { headers: { "Accept-Language": "pt-BR" } }
         );
         const data: NominatimResult[] = await res.json();
         setResults(
-          data.map((r) => ({
-            name: r.display_name.split(",")[0],
-            address: r.display_name.split(",").slice(1, 3).join(",").trim(),
-            lat: parseFloat(r.lat),
-            lng: parseFloat(r.lon),
-          }))
+          data
+            .filter((r) => isWithinMontesclaros(parseFloat(r.lat), parseFloat(r.lon)))
+            .map((r) => ({
+              name: r.display_name.split(",")[0],
+              address: r.display_name.split(",").slice(1, 3).join(",").trim(),
+              lat: parseFloat(r.lat),
+              lng: parseFloat(r.lon),
+            }))
         );
       } catch {
         setResults([]);
