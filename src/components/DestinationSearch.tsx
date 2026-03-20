@@ -127,8 +127,14 @@ const DestinationSearch = ({ onBack, onSelect, userLocation }: DestinationSearch
         </div>
 
         {displayList.length === 0 && query.length >= 3 && !loading && (
-          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-            Nenhum endereço encontrado
+          <div className="px-4 py-8 text-center space-y-2">
+            <AlertTriangle size={24} className="mx-auto text-yellow-500" />
+            <p className="text-sm text-muted-foreground">
+              Nenhum endereço encontrado em <strong className="text-foreground">Montes Claros – MG</strong>.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              O serviço atende apenas a cidade de Montes Claros.
+            </p>
           </div>
         )}
 

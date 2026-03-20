@@ -50,11 +50,17 @@ const MapView = ({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
+    const { bounds } = MONTES_CLAROS;
+    const maxBounds = L.latLngBounds([bounds.south, bounds.west], [bounds.north, bounds.east]);
+
     const map = L.map(containerRef.current, {
       center: [pickupLocation.lat, pickupLocation.lng],
       zoom: 15,
       zoomControl: false,
       attributionControl: false,
+      maxBounds: maxBounds.pad(0.1),
+      maxBoundsViscosity: 1.0,
+      minZoom: 12,
     });
 
     L.tileLayer(TILE_URL).addTo(map);
