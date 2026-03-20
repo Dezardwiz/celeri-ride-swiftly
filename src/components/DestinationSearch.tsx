@@ -32,9 +32,9 @@ interface DestinationSearchProps {
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
 
 const recentLocations: LocationResult[] = [
-  { name: "Shopping Manaus ViaNorte", address: "Av. Arquiteto José Henrique Bento, 1300", lat: -3.0558, lng: -59.9878 },
-  { name: "Aeroporto Eduardo Gomes", address: "Av. Santos Dumont, 1350", lat: -3.0386, lng: -60.0497 },
-  { name: "Teatro Amazonas", address: "R. Tapajós, s/n - Centro", lat: -3.1302, lng: -60.0233 },
+  { name: "Montes Claros Shopping", address: "Av. Donato Quintino, 90 - Cândida Câmara", lat: -16.7195, lng: -43.8533 },
+  { name: "Rodoviária de Montes Claros", address: "Av. Castelar Prate, 322 - Centro", lat: -16.7278, lng: -43.8615 },
+  { name: "Hospital Santa Casa", address: "Praça Honorato Alves, 22 - Centro", lat: -16.7322, lng: -43.8618 },
 ];
 
 const DestinationSearch = ({ onBack, onSelect, userLocation }: DestinationSearchProps) => {
