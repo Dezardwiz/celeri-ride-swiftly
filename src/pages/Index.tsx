@@ -11,6 +11,7 @@ import RideComplete from "@/components/RideComplete";
 import HistoryScreen from "@/components/HistoryScreen";
 import ProfileScreen from "@/components/ProfileScreen";
 import { useRide, useActiveTariff, calculatePrice } from "@/hooks/useRide";
+import { MONTES_CLAROS } from "@/lib/geo";
 import { toast } from "sonner";
 
 type AppScreen =
@@ -56,7 +57,7 @@ const Index = () => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => setUserLocation({ lat: -3.119, lng: -60.022 }),
+      () => setUserLocation(MONTES_CLAROS.center),
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }, []);
@@ -134,9 +135,9 @@ const Index = () => {
       <MapView
         showRoute={showRoute}
         searching={isSearching}
-        driverLocation={showDriver ? { lat: (userLocation?.lat ?? -3.119) + 0.004, lng: (userLocation?.lng ?? -60.022) + 0.004 } : undefined}
-        pickupLocation={userLocation ?? { lat: -3.119, lng: -60.022 }}
-        dropoffLocation={dropoffCoords ?? { lat: (userLocation?.lat ?? -3.119) + 0.024, lng: (userLocation?.lng ?? -60.022) + 0.017 }}
+        driverLocation={showDriver ? { lat: (userLocation?.lat ?? MONTES_CLAROS.center.lat) + 0.004, lng: (userLocation?.lng ?? MONTES_CLAROS.center.lng) + 0.004 } : undefined}
+        pickupLocation={userLocation ?? MONTES_CLAROS.center}
+        dropoffLocation={dropoffCoords ?? { lat: (userLocation?.lat ?? MONTES_CLAROS.center.lat) + 0.015, lng: (userLocation?.lng ?? MONTES_CLAROS.center.lng) + 0.01 }}
       />
 
       <div className="absolute left-4 top-4 z-30">

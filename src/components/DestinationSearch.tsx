@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, MapPin, Navigation, Loader2, Search } from "lucide-react";
+import { ArrowLeft, MapPin, Navigation, Loader2, Search, AlertTriangle } from "lucide-react";
+import { MONTES_CLAROS, isWithinMontesclaros } from "@/lib/geo";
 import { motion } from "framer-motion";
 
 interface NominatimResult {
@@ -31,9 +32,9 @@ interface DestinationSearchProps {
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
 
 const recentLocations: LocationResult[] = [
-  { name: "Shopping Manaus ViaNorte", address: "Av. Arquiteto José Henrique Bento, 1300", lat: -3.0558, lng: -59.9878 },
-  { name: "Aeroporto Eduardo Gomes", address: "Av. Santos Dumont, 1350", lat: -3.0386, lng: -60.0497 },
-  { name: "Teatro Amazonas", address: "R. Tapajós, s/n - Centro", lat: -3.1302, lng: -60.0233 },
+  { name: "Montes Claros Shopping", address: "Av. Donato Quintino, 90 - Cândida Câmara", lat: -16.7195, lng: -43.8533 },
+  { name: "Rodoviária de Montes Claros", address: "Av. Castelar Prate, 322 - Centro", lat: -16.7278, lng: -43.8615 },
+  { name: "Hospital Santa Casa", address: "Praça Honorato Alves, 22 - Centro", lat: -16.7322, lng: -43.8618 },
 ];
 
 const DestinationSearch = ({ onBack, onSelect, userLocation }: DestinationSearchProps) => {
@@ -52,21 +53,22 @@ const DestinationSearch = ({ onBack, onSelect, userLocation }: DestinationSearch
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const viewbox = userLocation
-          ? `&viewbox=${userLocation.lng - 0.15},${userLocation.lat + 0.15},${userLocation.lng + 0.15},${userLocation.lat - 0.15}&bounded=1`
-          : "";
+        const { bounds } = MONTES_CLAROS;
+        const viewbox = `&viewbox=${bounds.west},${bounds.north},${bounds.east},${bounds.south}&bounded=1`;
         const res = await fetch(
           `${NOMINATIM_URL}?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=8&countrycodes=br${viewbox}`,
           { headers: { "Accept-Language": "pt-BR" } }
         );
         const data: NominatimResult[] = await res.json();
         setResults(
-          data.map((r) => ({
-            name: r.display_name.split(",")[0],
-            address: r.display_name.split(",").slice(1, 3).join(",").trim(),
-            lat: parseFloat(r.lat),
-            lng: parseFloat(r.lon),
-          }))
+          data
+            .filter((r) => isWithinMontesclaros(parseFloat(r.lat), parseFloat(r.lon)))
+            .map((r) => ({
+              name: r.display_name.split(",")[0],
+              address: r.display_name.split(",").slice(1, 3).join(",").trim(),
+              lat: parseFloat(r.lat),
+              lng: parseFloat(r.lon),
+            }))
         );
       } catch {
         setResults([]);
@@ -125,8 +127,14 @@ const DestinationSearch = ({ onBack, onSelect, userLocation }: DestinationSearch
         </div>
 
         {displayList.length === 0 && query.length >= 3 && !loading && (
-          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-            Nenhum endereço encontrado
+          <div className="px-4 py-8 text-center space-y-2">
+            <AlertTriangle size={24} className="mx-auto text-yellow-500" />
+            <p className="text-sm text-muted-foreground">
+              Nenhum endereço encontrado em <strong className="text-foreground">Montes Claros – MG</strong>.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              O serviço atende apenas a cidade de Montes Claros.
+            </p>
           </div>
         )}
 
