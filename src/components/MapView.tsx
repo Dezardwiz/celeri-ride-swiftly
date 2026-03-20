@@ -35,8 +35,8 @@ const MapView = ({
   showRoute = false,
   searching = false,
   driverLocation,
-  pickupLocation = { lat: -3.119, lng: -60.022 },
-  dropoffLocation = { lat: -3.095, lng: -60.005 },
+  pickupLocation = MONTES_CLAROS.center,
+  dropoffLocation = { lat: MONTES_CLAROS.center.lat + 0.015, lng: MONTES_CLAROS.center.lng + 0.01 },
 }: MapViewProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
