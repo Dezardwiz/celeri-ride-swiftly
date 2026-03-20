@@ -1,16 +1,43 @@
 import { ArrowLeft, User, Star, Phone, Mail, LogOut, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProfileScreenProps {
   onBack: () => void;
 }
 
 const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
+  const { user, signOut } = useAuth();
+  const [profile, setProfile] = useState<{ full_name: string | null; phone: string | null } | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("full_name, phone")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => setProfile(data));
+  }, [user]);
+
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || "Usuário";
+  const initials = displayName
+    .split(" ")
+    .map((w: string) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
   const menuItems = [
-    { icon: Phone, label: "Telefone", value: "+55 92 9****-1234" },
-    { icon: Mail, label: "Email", value: "usuario@email.com" },
-    { icon: Star, label: "Minha avaliação", value: "4.8 ★" },
+    { icon: Phone, label: "Telefone", value: profile?.phone || user?.phone || "Não informado" },
+    { icon: Mail, label: "Email", value: user?.email || "Não informado" },
   ];
+
+  const handleLogout = async () => {
+    await signOut();
+  };
 
   return (
     <motion.div
@@ -26,18 +53,16 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
       </div>
 
       <div className="flex-1 overflow-y-auto no-scrollbar pb-20">
-        {/* Avatar section */}
         <div className="flex flex-col items-center py-8 border-b border-border">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary font-display text-2xl text-primary-foreground">
-            JP
+            {initials}
           </div>
           <h3 className="mt-3 font-display text-lg uppercase tracking-wider text-foreground">
-            João Pedro
+            {displayName}
           </h3>
-          <p className="text-sm text-muted-foreground">Passageiro desde Mar 2026</p>
+          <p className="text-sm text-muted-foreground">Passageiro</p>
         </div>
 
-        {/* Menu items */}
         <div className="divide-y divide-border">
           {menuItems.map((item, i) => (
             <div key={i} className="flex items-center gap-3 px-4 py-4">
@@ -51,15 +76,16 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
           ))}
         </div>
 
-        {/* Logout */}
         <div className="p-4 mt-4">
-          <button className="flex w-full items-center justify-center gap-2 rounded-md border border-border py-3 font-display text-sm uppercase tracking-wider text-destructive transition-colors hover:bg-destructive/10">
+          <button
+            onClick={handleLogout}
+            className="flex w-full items-center justify-center gap-2 rounded-md border border-border py-3 font-display text-sm uppercase tracking-wider text-destructive transition-colors hover:bg-destructive/10"
+          >
             <LogOut size={16} />
             Sair
           </button>
         </div>
 
-        {/* Footer */}
         <div className="p-4 text-center">
           <p className="text-xs text-muted-foreground">desenvolvido por payn</p>
         </div>
