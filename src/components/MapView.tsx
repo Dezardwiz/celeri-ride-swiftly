@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
+import { MONTES_CLAROS } from "@/lib/geo";
 import "leaflet/dist/leaflet.css";
 
 interface MapViewProps {
