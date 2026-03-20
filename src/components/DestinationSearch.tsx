@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, MapPin, Navigation, Loader2, Search } from "lucide-react";
+import { ArrowLeft, MapPin, Navigation, Loader2, Search, AlertTriangle } from "lucide-react";
+import { MONTES_CLAROS, isWithinMontesclaros } from "@/lib/geo";
 import { motion } from "framer-motion";
 
 interface NominatimResult {
