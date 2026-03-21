@@ -20,6 +20,8 @@ export type Database = {
           document: string
           id: string
           is_approved: boolean
+          location_lat: number | null
+          location_lng: number | null
           moto_model: string
           photo_url: string | null
           plate: string
@@ -34,6 +36,8 @@ export type Database = {
           document: string
           id?: string
           is_approved?: boolean
+          location_lat?: number | null
+          location_lng?: number | null
           moto_model: string
           photo_url?: string | null
           plate: string
@@ -48,6 +52,8 @@ export type Database = {
           document?: string
           id?: string
           is_approved?: boolean
+          location_lat?: number | null
+          location_lng?: number | null
           moto_model?: string
           photo_url?: string | null
           plate?: string
