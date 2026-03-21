@@ -59,8 +59,7 @@ const DriverAuth = () => {
     }
 
     // 2. Assign driver role
-    // Note: default role is 'passenger', we need to add 'driver' role too
-    // This requires a DB function since users can't insert into user_roles directly
+    await supabase.rpc("assign_driver_role", { _user_id: authData.user.id });
 
     // 3. Create driver record
     const { error: driverError } = await supabase.from("drivers").insert({
