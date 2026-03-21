@@ -1,24 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Power, MapPin, Navigation, Clock, DollarSign, Loader2 } from "lucide-react";
-import { useDriver, useIncomingRides } from "@/hooks/useDriver";
+import { useDriver, useIncomingRides, useDriverLocation } from "@/hooks/useDriver";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Ride = Tables<"rides">;
 
 const DriverHome = () => {
-  const { user } = useAuth();
-  const { driver, loading: driverLoading, updateStatus } = useDriver();
-  const incomingRides = useIncomingRides();
+  const { driver, loading: driverLoading, updateStatus, updateLocation } = useDriver();
+  const driverLocation = useDriverLocation();
+  const incomingRides = useIncomingRides(driverLocation);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
 
   const isOnline = driver?.status === "available";
 
+  // Update driver location periodically when online
+  useEffect(() => {
+    if (!isOnline || !driver) return;
+    updateLocation(driverLocation.lat, driverLocation.lng);
+    const interval = setInterval(() => {
+      updateLocation(driverLocation.lat, driverLocation.lng);
+    }, 30000); // every 30s
+    return () => clearInterval(interval);
+  }, [isOnline, driverLocation.lat, driverLocation.lng, driver?.id]);
+
   const toggleAvailability = async () => {
     await updateStatus(isOnline ? "unavailable" : "available");
+    if (!isOnline) {
+      await updateLocation(driverLocation.lat, driverLocation.lng);
+    }
     toast.success(isOnline ? "Você está offline" : "Você está online!");
   };
 
@@ -42,7 +54,7 @@ const DriverHome = () => {
 
   if (driverLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full items-center justify-center py-20">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     );
@@ -50,7 +62,7 @@ const DriverHome = () => {
 
   if (!driver) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+      <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center py-20">
         <Power className="h-12 w-12 text-muted-foreground" />
         <h2 className="font-display text-lg uppercase tracking-wider text-foreground">Cadastro pendente</h2>
         <p className="text-sm text-muted-foreground">Seu cadastro de mototaxista ainda não foi encontrado ou aprovado.</p>
@@ -82,7 +94,7 @@ const DriverHome = () => {
       {/* Incoming rides */}
       <div>
         <h3 className="font-display text-xs uppercase tracking-wider text-muted-foreground mb-3">
-          Corridas disponíveis ({incomingRides.length})
+          Corridas próximas ({incomingRides.length})
         </h3>
 
         {!isOnline && (
@@ -94,7 +106,7 @@ const DriverHome = () => {
         {isOnline && incomingRides.length === 0 && (
           <div className="rounded-xl border border-border bg-card p-6 text-center">
             <Navigation className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">Aguardando novas corridas...</p>
+            <p className="text-sm text-muted-foreground">Aguardando novas corridas próximas...</p>
           </div>
         )}
 

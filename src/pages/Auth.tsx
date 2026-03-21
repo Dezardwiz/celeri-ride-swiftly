@@ -111,6 +111,12 @@ const Auth = () => {
               Entrar com Telefone
             </Button>
             <p className="pt-4 text-center text-xs text-muted-foreground">
+              É mototaxista?{" "}
+              <button onClick={() => window.location.href = "/driver/auth"} className="text-primary hover:underline">
+                Entrar como mototaxista
+              </button>
+            </p>
+            <p className="pt-1 text-center text-xs text-muted-foreground">
               desenvolvido por <span className="font-medium text-foreground">payn</span>
             </p>
           </motion.div>
