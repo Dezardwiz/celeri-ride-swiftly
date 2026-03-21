@@ -3,10 +3,28 @@ import { AnimatePresence, motion } from "framer-motion";
 import DriverHome from "@/components/driver/DriverHome";
 import DriverEarnings from "@/components/driver/DriverEarnings";
 import DriverNav from "@/components/driver/DriverNav";
+import DriverRideNavigation from "@/components/driver/DriverRideNavigation";
 import ProfileScreen from "@/components/ProfileScreen";
+import { useActiveRide } from "@/hooks/useActiveRide";
+import { toast } from "sonner";
 
 const Driver = () => {
   const [activeTab, setActiveTab] = useState<"home" | "earnings" | "profile">("home");
+  const { ride: activeRide, advanceStatus, completeRide, cancelRide } = useActiveRide();
+
+  const handleAdvance = async () => {
+    await advanceStatus();
+  };
+
+  const handleComplete = async () => {
+    await completeRide();
+    toast.success("Corrida finalizada!");
+  };
+
+  const handleCancel = async () => {
+    await cancelRide();
+    toast.info("Corrida cancelada");
+  };
 
   return (
     <div className="relative min-h-screen w-full bg-background">
@@ -17,27 +35,44 @@ const Driver = () => {
         </h1>
       </div>
 
-      {/* Content */}
-      <AnimatePresence mode="wait">
-        {activeTab === "home" && (
-          <motion.div key="driver-home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <DriverHome />
-          </motion.div>
-        )}
-        {activeTab === "earnings" && (
-          <motion.div key="driver-earnings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <DriverEarnings />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+      {/* Active ride navigation - fullscreen overlay */}
       <AnimatePresence>
-        {activeTab === "profile" && (
-          <ProfileScreen key="driver-profile" onBack={() => setActiveTab("home")} />
+        {activeRide && (
+          <DriverRideNavigation
+            key="ride-nav"
+            ride={activeRide}
+            onAdvance={handleAdvance}
+            onComplete={handleComplete}
+            onCancel={handleCancel}
+          />
         )}
       </AnimatePresence>
 
-      <DriverNav activeTab={activeTab} onTabChange={setActiveTab} />
+      {/* Content - only shown when no active ride */}
+      {!activeRide && (
+        <>
+          <AnimatePresence mode="wait">
+            {activeTab === "home" && (
+              <motion.div key="driver-home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <DriverHome />
+              </motion.div>
+            )}
+            {activeTab === "earnings" && (
+              <motion.div key="driver-earnings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <DriverEarnings />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {activeTab === "profile" && (
+              <ProfileScreen key="driver-profile" onBack={() => setActiveTab("home")} />
+            )}
+          </AnimatePresence>
+
+          <DriverNav activeTab={activeTab} onTabChange={setActiveTab} />
+        </>
+      )}
     </div>
   );
 };
