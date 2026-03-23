@@ -13,6 +13,7 @@ const DriverHome = () => {
   const { driver, loading: driverLoading, updateStatus, updateLocation } = useDriver();
   const driverLocation = useDriverLocation();
   const incomingRides = useIncomingRides(driverLocation);
+  const isOnline = driver?.status === "available";
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const prevRideCountRef = useRef(incomingRides.length);
 
@@ -26,7 +27,6 @@ const DriverHome = () => {
     }
     prevRideCountRef.current = incomingRides.length;
   }, [incomingRides.length, isOnline]);
-  const isOnline = driver?.status === "available";
 
   // Update driver location periodically when online
   useEffect(() => {
