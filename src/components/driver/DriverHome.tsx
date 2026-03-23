@@ -14,7 +14,18 @@ const DriverHome = () => {
   const driverLocation = useDriverLocation();
   const incomingRides = useIncomingRides(driverLocation);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const prevRideCountRef = useRef(incomingRides.length);
 
+  // Notify on new incoming rides
+  useEffect(() => {
+    if (isOnline && incomingRides.length > prevRideCountRef.current) {
+      notifyNewRide();
+      toast("🏍️ Nova corrida disponível!", {
+        description: "Uma nova corrida apareceu próxima a você",
+      });
+    }
+    prevRideCountRef.current = incomingRides.length;
+  }, [incomingRides.length, isOnline]);
   const isOnline = driver?.status === "available";
 
   // Update driver location periodically when online
