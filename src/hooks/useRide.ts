@@ -77,7 +77,20 @@ export function useRide() {
       .select()
       .single();
     setLoading(false);
-    if (data) setCurrentRide(data);
+    if (data) {
+      setCurrentRide(data);
+      // Trigger push notifications to nearby drivers
+      supabase.functions.invoke("send-push", {
+        body: {
+          ride_id: data.id,
+          origin_lat: params.originLat,
+          origin_lng: params.originLng,
+          origin_address: params.originAddress,
+          destination_address: params.destinationAddress,
+          estimated_price: params.estimatedPrice,
+        },
+      }).catch(console.error);
+    }
     return data;
   };
 

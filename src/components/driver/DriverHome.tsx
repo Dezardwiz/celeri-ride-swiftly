@@ -14,9 +14,17 @@ const DriverHome = () => {
   const { driver, loading: driverLoading, updateStatus, updateLocation } = useDriver();
   const driverLocation = useDriverLocation();
   const incomingRides = useIncomingRides(driverLocation);
+  const { isSupported: pushSupported, isSubscribed: pushSubscribed, subscribe: subscribePush } = usePushNotifications();
   const isOnline = driver?.status === "available";
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const prevRideCountRef = useRef(incomingRides.length);
+
+  // Auto-subscribe to push notifications when going online
+  useEffect(() => {
+    if (isOnline && pushSupported && !pushSubscribed) {
+      subscribePush();
+    }
+  }, [isOnline, pushSupported, pushSubscribed]);
 
   // Notify on new incoming rides
   useEffect(() => {
