@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Power, MapPin, Navigation, Clock, DollarSign, Loader2, BellRing } from "lucide-react";
 import { useDriver, useIncomingRides, useDriverLocation } from "@/hooks/useDriver";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { notifyNewRide } from "@/lib/notifications";
@@ -13,9 +14,17 @@ const DriverHome = () => {
   const { driver, loading: driverLoading, updateStatus, updateLocation } = useDriver();
   const driverLocation = useDriverLocation();
   const incomingRides = useIncomingRides(driverLocation);
+  const { isSupported: pushSupported, isSubscribed: pushSubscribed, subscribe: subscribePush } = usePushNotifications();
   const isOnline = driver?.status === "available";
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const prevRideCountRef = useRef(incomingRides.length);
+
+  // Auto-subscribe to push notifications when going online
+  useEffect(() => {
+    if (isOnline && pushSupported && !pushSubscribed) {
+      subscribePush();
+    }
+  }, [isOnline, pushSupported, pushSubscribed]);
 
   // Notify on new incoming rides
   useEffect(() => {
