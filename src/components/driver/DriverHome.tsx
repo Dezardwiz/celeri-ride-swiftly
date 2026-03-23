@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Power, MapPin, Navigation, Clock, DollarSign, Loader2 } from "lucide-react";
+import { Power, MapPin, Navigation, Clock, DollarSign, Loader2, BellRing } from "lucide-react";
 import { useDriver, useIncomingRides, useDriverLocation } from "@/hooks/useDriver";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { notifyNewRide } from "@/lib/notifications";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Ride = Tables<"rides">;
