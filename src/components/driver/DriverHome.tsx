@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Power, MapPin, Navigation, Clock, DollarSign, Loader2 } from "lucide-react";
+import { Power, MapPin, Navigation, Clock, DollarSign, Loader2, BellRing } from "lucide-react";
 import { useDriver, useIncomingRides, useDriverLocation } from "@/hooks/useDriver";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { notifyNewRide } from "@/lib/notifications";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Ride = Tables<"rides">;
@@ -12,9 +13,20 @@ const DriverHome = () => {
   const { driver, loading: driverLoading, updateStatus, updateLocation } = useDriver();
   const driverLocation = useDriverLocation();
   const incomingRides = useIncomingRides(driverLocation);
-  const [acceptingId, setAcceptingId] = useState<string | null>(null);
-
   const isOnline = driver?.status === "available";
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const prevRideCountRef = useRef(incomingRides.length);
+
+  // Notify on new incoming rides
+  useEffect(() => {
+    if (isOnline && incomingRides.length > prevRideCountRef.current) {
+      notifyNewRide();
+      toast("🏍️ Nova corrida disponível!", {
+        description: "Uma nova corrida apareceu próxima a você",
+      });
+    }
+    prevRideCountRef.current = incomingRides.length;
+  }, [incomingRides.length, isOnline]);
 
   // Update driver location periodically when online
   useEffect(() => {
