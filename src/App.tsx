@@ -65,6 +65,9 @@ const App = () => (
             <Route path="/driver/auth" element={<DriverAuthRoute><DriverAuth /></DriverAuthRoute>} />
             <Route path="/driver" element={<DriverProtectedRoute><Driver /></DriverProtectedRoute>} />
 
+            {/* Admin route */}
+            <Route path="/admin" element={<Admin />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
