@@ -9,6 +9,7 @@ import Auth from "./pages/Auth.tsx";
 import DriverAuth from "./pages/DriverAuth.tsx";
 import Driver from "./pages/Driver.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import Admin from "./pages/Admin.tsx";
 
 const queryClient = new QueryClient();
 

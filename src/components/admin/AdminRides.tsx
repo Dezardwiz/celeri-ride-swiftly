@@ -27,7 +27,7 @@ export const AdminRides = () => {
     const fetchRides = async () => {
       let query = supabase.from("rides").select("*").order("created_at", { ascending: false }).limit(100);
       if (filter !== "all") {
-        query = query.eq("status", filter);
+        query = query.eq("status", filter as Ride["status"]);
       }
       const { data } = await query;
       setRides(data || []);
