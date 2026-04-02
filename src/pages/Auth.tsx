@@ -79,11 +79,11 @@ const Auth = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-10">
+        className="mb-10 flex flex-col items-center">
         
-        <img src={geleriLogo} alt="Geleri" className="h-20 w-20 rounded-2xl" />
+        <img src={geleriLogo} alt="Celeri" className="h-20 w-20 rounded-2xl" />
         <h1 className="mt-3 font-display text-3xl font-bold uppercase tracking-widest text-foreground">
-          GELERI
+          CELERI
         </h1>
         <p className="mt-1 text-center text-sm text-muted-foreground">Seu destino, sem demora.</p>
       </motion.div>
