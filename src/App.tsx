@@ -1,9 +1,11 @@
+import { useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import SplashScreen from "@/components/SplashScreen";
 import Index from "./pages/Index.tsx";
 import Auth from "./pages/Auth.tsx";
 import DriverAuth from "./pages/DriverAuth.tsx";
@@ -49,28 +51,44 @@ const DriverAuthRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const AppContent = () => {
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSplash(false), 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <>
+      <SplashScreen visible={showSplash} />
+      <BrowserRouter>
+        <Routes>
+          {/* Passenger routes */}
+          <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
+          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+
+          {/* Driver routes */}
+          <Route path="/driver/auth" element={<DriverAuthRoute><DriverAuth /></DriverAuthRoute>} />
+          <Route path="/driver" element={<DriverProtectedRoute><Driver /></DriverProtectedRoute>} />
+
+          {/* Admin route */}
+          <Route path="/admin" element={<Admin />} />
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Passenger routes */}
-            <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-
-            {/* Driver routes */}
-            <Route path="/driver/auth" element={<DriverAuthRoute><DriverAuth /></DriverAuthRoute>} />
-            <Route path="/driver" element={<DriverProtectedRoute><Driver /></DriverProtectedRoute>} />
-
-            {/* Admin route */}
-            <Route path="/admin" element={<Admin />} />
-
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <AppContent />
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
