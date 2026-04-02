@@ -13,6 +13,7 @@ import ProfileScreen from "@/components/ProfileScreen";
 import { useRide, useActiveTariff, calculatePrice } from "@/hooks/useRide";
 import { MONTES_CLAROS } from "@/lib/geo";
 import { toast } from "sonner";
+import geleriLogo from "@/assets/geleri-logo.jpeg";
 
 type AppScreen =
   | "home"
