@@ -9,6 +9,7 @@ import { AdminTariffs } from "@/components/admin/AdminTariffs";
 import { AdminReports } from "@/components/admin/AdminReports";
 import { Shield, Users, Car, DollarSign, BarChart3, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import geleriLogo from "@/assets/geleri-logo.jpeg";
 
 const Admin = () => {
   const { user, loading, signOut } = useAuth();
