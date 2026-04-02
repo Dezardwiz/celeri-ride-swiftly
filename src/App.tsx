@@ -51,9 +51,39 @@ const DriverAuthRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const AppContent = () => {
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSplash(false), 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <>
+      <SplashScreen visible={showSplash} />
+      <BrowserRouter>
+        <Routes>
+          {/* Passenger routes */}
+          <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
+          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+
+          {/* Driver routes */}
+          <Route path="/driver/auth" element={<DriverAuthRoute><DriverAuth /></DriverAuthRoute>} />
+          <Route path="/driver" element={<DriverProtectedRoute><Driver /></DriverProtectedRoute>} />
+
+          {/* Admin route */}
+          <Route path="/admin" element={<Admin />} />
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
       <Toaster />
       <Sonner />
       <AuthProvider>
