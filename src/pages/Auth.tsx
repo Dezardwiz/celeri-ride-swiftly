@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Mail, Phone, ArrowLeft, Loader2 } from "lucide-react";
+import geleriLogo from "@/assets/geleri-logo.jpeg";
 
 type AuthMode = "choice" | "email-login" | "email-signup" | "phone-login" | "otp-verify";
 
