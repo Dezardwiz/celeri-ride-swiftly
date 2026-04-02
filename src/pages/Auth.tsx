@@ -81,10 +81,11 @@ const Auth = () => {
         animate={{ opacity: 1, y: 0 }}
         className="mb-10">
         
-        <h1 className="font-display text-4xl font-bold uppercase tracking-widest text-foreground">
-          CELERI
+        <img src={geleriLogo} alt="Geleri" className="h-20 w-20 rounded-2xl" />
+        <h1 className="mt-3 font-display text-3xl font-bold uppercase tracking-widest text-foreground">
+          GELERI
         </h1>
-        <p className="mt-1 text-center text-sm text-muted-foreground">Mototáxi rápido e seguro</p>
+        <p className="mt-1 text-center text-sm text-muted-foreground">Seu destino, sem demora.</p>
       </motion.div>
 
       <AnimatePresence mode="wait">

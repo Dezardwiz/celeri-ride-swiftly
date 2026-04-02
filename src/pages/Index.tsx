@@ -141,8 +141,9 @@ const Index = () => {
         dropoffLocation={dropoffCoords ?? { lat: (userLocation?.lat ?? MONTES_CLAROS.center.lat) + 0.015, lng: (userLocation?.lng ?? MONTES_CLAROS.center.lng) + 0.01 }}
       />
 
-      <div className="absolute left-4 top-4 z-30">
-        <h1 className="font-display text-2xl font-bold uppercase tracking-widest text-foreground">CELERI</h1>
+      <div className="absolute left-4 top-4 z-30 flex items-center gap-2">
+        <img src={geleriLogo} alt="Geleri" className="h-9 w-9 rounded-lg" />
+        <h1 className="font-display text-xl font-bold uppercase tracking-widest text-foreground">GELERI</h1>
       </div>
 
       <AnimatePresence mode="wait">

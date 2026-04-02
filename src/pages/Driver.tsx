@@ -31,9 +31,12 @@ const Driver = () => {
     <div className="relative min-h-screen w-full bg-background">
       {/* Header */}
       <div className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-sm px-4 py-3">
-        <h1 className="font-display text-xl font-bold uppercase tracking-widest text-foreground">
-          CELERI <span className="text-primary text-sm font-normal tracking-wide">moto</span>
-        </h1>
+        <div className="flex items-center gap-2">
+          <img src={geleriLogo} alt="Geleri" className="h-8 w-8 rounded-lg" />
+          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-foreground">
+            GELERI <span className="text-primary text-sm font-normal tracking-wide">moto</span>
+          </h1>
+        </div>
       </div>
 
       {/* Active ride navigation - fullscreen overlay */}

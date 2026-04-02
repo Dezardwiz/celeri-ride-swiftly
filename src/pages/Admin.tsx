@@ -45,7 +45,7 @@ const Admin = () => {
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Shield className="h-5 w-5 text-primary" />
+          <img src={geleriLogo} alt="Geleri" className="h-8 w-8 rounded-lg" />
           <h1 className="text-lg font-bold font-heading">Painel Administrativo</h1>
         </div>
         <Button variant="ghost" size="sm" onClick={signOut}>
