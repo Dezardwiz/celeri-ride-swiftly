@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, Bike, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import geleriLogo from "@/assets/geleri-logo.jpeg";
 
 type AuthMode = "choice" | "login" | "signup" | "register-driver";
 
