@@ -7,6 +7,7 @@ import DriverRideNavigation from "@/components/driver/DriverRideNavigation";
 import ProfileScreen from "@/components/ProfileScreen";
 import { useActiveRide } from "@/hooks/useActiveRide";
 import { toast } from "sonner";
+import geleriLogo from "@/assets/geleri-logo.jpeg";
 
 const Driver = () => {
   const [activeTab, setActiveTab] = useState<"home" | "earnings" | "profile">("home");
