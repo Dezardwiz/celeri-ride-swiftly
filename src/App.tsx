@@ -84,25 +84,11 @@ const AppContent = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
       <Toaster />
       <Sonner />
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Passenger routes */}
-            <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-
-            {/* Driver routes */}
-            <Route path="/driver/auth" element={<DriverAuthRoute><DriverAuth /></DriverAuthRoute>} />
-            <Route path="/driver" element={<DriverProtectedRoute><Driver /></DriverProtectedRoute>} />
-
-            {/* Admin route */}
-            <Route path="/admin" element={<Admin />} />
-
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <AppContent />
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
