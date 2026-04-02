@@ -94,7 +94,7 @@ const DriverAuth = () => {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6">
       {/* Logo */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 flex flex-col items-center">
         <img src={geleriLogo} alt="Celeri" className="h-20 w-20 rounded-2xl" />
         <h1 className="mt-3 font-display text-3xl font-bold uppercase tracking-widest text-foreground">CELERI</h1>
         <div className="mt-2 flex items-center justify-center gap-2">
