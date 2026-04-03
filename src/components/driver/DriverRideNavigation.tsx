@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import L from "leaflet";
 import { MONTES_CLAROS } from "@/lib/geo";
+import { fetchRoute } from "@/lib/routing";
 import { Navigation, Phone, X, ChevronRight, CheckCircle2, MapPin, Loader2 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import "leaflet/dist/leaflet.css";
