@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import L from "leaflet";
 import { MONTES_CLAROS } from "@/lib/geo";
+import { fetchRoute } from "@/lib/routing";
 import { Navigation, Phone, X, ChevronRight, CheckCircle2, MapPin, Loader2 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import "leaflet/dist/leaflet.css";
@@ -92,7 +93,7 @@ const DriverRideNavigation = ({ ride, onAdvance, onComplete, onCancel }: Props) 
     return () => { map.remove(); mapRef.current = null; };
   }, []);
 
-  // Update driver marker & route
+  // Update driver marker & route with real road directions
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !driverPos) return;
@@ -103,31 +104,28 @@ const DriverRideNavigation = ({ ride, onAdvance, onComplete, onCancel }: Props) 
       driverMarkerRef.current = L.marker([driverPos.lat, driverPos.lng], { icon: driverIcon }).addTo(map);
     }
 
-    // Draw route line from driver to target
+    // Fetch real route from driver to target
     if (routeRef.current) map.removeLayer(routeRef.current);
-    const points: [number, number][] = [];
-    for (let i = 0; i <= 10; i++) {
-      const t = i / 10;
-      const lat = driverPos.lat + (target.lat - driverPos.lat) * t;
-      const lng = driverPos.lng + (target.lng - driverPos.lng) * t;
-      const curve = Math.sin(t * Math.PI) * 0.003;
-      points.push([lat + curve, lng]);
-    }
-    routeRef.current = L.polyline(points, {
-      color: isGoingToPickup ? "#2F6BFF" : "#22c55e",
-      weight: 4,
-      opacity: 0.8,
-      dashArray: "8 4",
-    }).addTo(map);
 
-    // If in progress, also show route to dropoff
-    if (!isGoingToPickup) {
-      // already showing driver->dropoff
-    }
+    const routeColor = isGoingToPickup ? "#2F6BFF" : "#22c55e";
 
-    // Fit bounds
-    const allPoints: L.LatLngExpression[] = [[driverPos.lat, driverPos.lng], [target.lat, target.lng]];
-    map.fitBounds(L.latLngBounds(allPoints), { padding: [80, 80], maxZoom: 16 });
+    fetchRoute(driverPos, target).then((result) => {
+      if (!mapRef.current) return;
+      if (result && result.coordinates.length > 0) {
+        routeRef.current = L.polyline(result.coordinates, {
+          color: routeColor, weight: 4, opacity: 0.8,
+        }).addTo(map);
+        map.fitBounds(routeRef.current.getBounds(), { padding: [80, 80], maxZoom: 16 });
+      } else {
+        // Fallback: straight line
+        routeRef.current = L.polyline(
+          [[driverPos.lat, driverPos.lng], [target.lat, target.lng]],
+          { color: routeColor, weight: 4, opacity: 0.8, dashArray: "8 4" }
+        ).addTo(map);
+        const allPoints: L.LatLngExpression[] = [[driverPos.lat, driverPos.lng], [target.lat, target.lng]];
+        map.fitBounds(L.latLngBounds(allPoints), { padding: [80, 80], maxZoom: 16 });
+      }
+    });
   }, [driverPos?.lat, driverPos?.lng, ride.status]);
 
   const handleAction = () => {

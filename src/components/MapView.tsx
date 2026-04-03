@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import { MONTES_CLAROS } from "@/lib/geo";
+import { fetchRoute } from "@/lib/routing";
 import "leaflet/dist/leaflet.css";
 
 interface MapViewProps {
@@ -88,7 +89,7 @@ const MapView = ({
     }
   }, [pickupLocation.lat, pickupLocation.lng, showRoute]);
 
-  // Update route & dropoff
+  // Update route & dropoff with real road directions
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -98,25 +99,28 @@ const MapView = ({
     if (dropoffMarkerRef.current) { map.removeLayer(dropoffMarkerRef.current); dropoffMarkerRef.current = null; }
 
     if (showRoute) {
-      const points: [number, number][] = [];
-      for (let i = 0; i <= 10; i++) {
-        const t = i / 10;
-        const lat = pickupLocation.lat + (dropoffLocation.lat - pickupLocation.lat) * t;
-        const lng = pickupLocation.lng + (dropoffLocation.lng - pickupLocation.lng) * t;
-        const curve = Math.sin(t * Math.PI) * 0.008;
-        points.push([lat + curve, lng]);
-      }
-
-      routeLineRef.current = L.polyline(points, {
-        color: "#2F6BFF", weight: 4, opacity: 0.8, dashArray: "8 4",
-      }).addTo(map);
-
       dropoffMarkerRef.current = L.marker([dropoffLocation.lat, dropoffLocation.lng], { icon: dropoffIcon }).addTo(map);
 
-      map.fitBounds(L.latLngBounds(
-        [pickupLocation.lat, pickupLocation.lng],
-        [dropoffLocation.lat, dropoffLocation.lng]
-      ), { padding: [60, 60], maxZoom: 15 });
+      // Fetch real route
+      fetchRoute(pickupLocation, dropoffLocation).then((result) => {
+        if (!mapRef.current) return;
+        if (result && result.coordinates.length > 0) {
+          routeLineRef.current = L.polyline(result.coordinates, {
+            color: "#2F6BFF", weight: 4, opacity: 0.8,
+          }).addTo(map);
+          map.fitBounds(routeLineRef.current.getBounds(), { padding: [60, 60], maxZoom: 15 });
+        } else {
+          // Fallback: straight line
+          routeLineRef.current = L.polyline(
+            [[pickupLocation.lat, pickupLocation.lng], [dropoffLocation.lat, dropoffLocation.lng]],
+            { color: "#2F6BFF", weight: 4, opacity: 0.8, dashArray: "8 4" }
+          ).addTo(map);
+          map.fitBounds(L.latLngBounds(
+            [pickupLocation.lat, pickupLocation.lng],
+            [dropoffLocation.lat, dropoffLocation.lng]
+          ), { padding: [60, 60], maxZoom: 15 });
+        }
+      });
     }
   }, [showRoute, pickupLocation.lat, pickupLocation.lng, dropoffLocation.lat, dropoffLocation.lng]);
 
