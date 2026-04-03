@@ -58,28 +58,43 @@ const Admin = () => {
 
       <div className="p-4 max-w-6xl mx-auto">
         <Tabs defaultValue="drivers" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 bg-card">
-            <TabsTrigger value="drivers" className="flex items-center gap-1 text-xs sm:text-sm">
+          <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 bg-card overflow-x-auto">
+            <TabsTrigger value="drivers" className="flex items-center gap-1 text-xs">
               <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Mototaxistas</span>
+              <span className="hidden sm:inline">Motoristas</span>
             </TabsTrigger>
-            <TabsTrigger value="rides" className="flex items-center gap-1 text-xs sm:text-sm">
+            <TabsTrigger value="passengers" className="flex items-center gap-1 text-xs">
+              <UserCheck className="h-4 w-4" />
+              <span className="hidden sm:inline">Passageiros</span>
+            </TabsTrigger>
+            <TabsTrigger value="rides" className="flex items-center gap-1 text-xs">
               <Car className="h-4 w-4" />
               <span className="hidden sm:inline">Corridas</span>
             </TabsTrigger>
-            <TabsTrigger value="tariffs" className="flex items-center gap-1 text-xs sm:text-sm">
+            <TabsTrigger value="map" className="flex items-center gap-1 text-xs">
+              <MapPin className="h-4 w-4" />
+              <span className="hidden sm:inline">Mapa</span>
+            </TabsTrigger>
+            <TabsTrigger value="tariffs" className="flex items-center gap-1 text-xs">
               <DollarSign className="h-4 w-4" />
               <span className="hidden sm:inline">Tarifas</span>
             </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center gap-1 text-xs sm:text-sm">
+            <TabsTrigger value="finance" className="flex items-center gap-1 text-xs">
+              <Wallet className="h-4 w-4" />
+              <span className="hidden sm:inline">Financeiro</span>
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-1 text-xs">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Relatórios</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="drivers"><AdminDrivers /></TabsContent>
+          <TabsContent value="passengers"><AdminPassengers /></TabsContent>
           <TabsContent value="rides"><AdminRides /></TabsContent>
+          <TabsContent value="map"><AdminMap /></TabsContent>
           <TabsContent value="tariffs"><AdminTariffs /></TabsContent>
+          <TabsContent value="finance"><AdminFinance /></TabsContent>
           <TabsContent value="reports"><AdminReports /></TabsContent>
         </Tabs>
       </div>
