@@ -184,6 +184,7 @@ const Index = () => {
 
       <AnimatePresence>
         {activeTab === "history" && <HistoryScreen key="history" onBack={() => setActiveTab("home")} />}
+        {activeTab === "wallet" && <WalletScreen key="wallet" onBack={() => setActiveTab("home")} />}
         {activeTab === "profile" && <ProfileScreen key="profile" onBack={() => setActiveTab("home")} />}
       </AnimatePresence>
 

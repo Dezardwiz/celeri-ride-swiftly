@@ -1,15 +1,16 @@
-import { MapPin, Clock, Navigation } from "lucide-react";
+import { MapPin, Clock, Navigation, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface BottomNavProps {
-  activeTab: "home" | "history" | "profile";
-  onTabChange: (tab: "home" | "history" | "profile") => void;
+  activeTab: "home" | "history" | "wallet" | "profile";
+  onTabChange: (tab: "home" | "history" | "wallet" | "profile") => void;
 }
 
 const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
   const tabs = [
     { id: "home" as const, icon: Navigation, label: "CORRIDA" },
     { id: "history" as const, icon: Clock, label: "HISTÓRICO" },
+    { id: "wallet" as const, icon: Wallet, label: "CARTEIRA" },
     { id: "profile" as const, icon: MapPin, label: "PERFIL" },
   ];
 
