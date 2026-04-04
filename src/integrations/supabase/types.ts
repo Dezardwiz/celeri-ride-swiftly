@@ -14,6 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      commission_settings: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          percentage: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          percentage?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          percentage?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      driver_payouts: {
+        Row: {
+          amount: number
+          commission_amount: number
+          created_at: string
+          driver_id: string
+          gross_amount: number
+          id: string
+          paid_at: string | null
+          period_end: string | null
+          period_start: string | null
+          status: Database["public"]["Enums"]["payout_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          commission_amount?: number
+          created_at?: string
+          driver_id: string
+          gross_amount?: number
+          id?: string
+          paid_at?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          status?: Database["public"]["Enums"]["payout_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          commission_amount?: number
+          created_at?: string
+          driver_id?: string
+          gross_amount?: number
+          id?: string
+          paid_at?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          status?: Database["public"]["Enums"]["payout_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_payouts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drivers: {
         Row: {
           created_at: string
@@ -329,6 +403,68 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          reference_id: string | null
+          type: Database["public"]["Enums"]["wallet_transaction_type"]
+          wallet_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          type: Database["public"]["Enums"]["wallet_transaction_type"]
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          type?: Database["public"]["Enums"]["wallet_transaction_type"]
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -348,6 +484,7 @@ export type Database = {
       driver_status: "available" | "unavailable" | "on_ride"
       payment_method: "pix" | "card" | "cash"
       payment_status: "pending" | "completed" | "refunded"
+      payout_status: "pending" | "paid" | "canceled"
       ride_status:
         | "REQUESTED"
         | "ACCEPTED"
@@ -356,6 +493,12 @@ export type Database = {
         | "IN_PROGRESS"
         | "COMPLETED"
         | "CANCELED"
+      wallet_transaction_type:
+        | "credit"
+        | "debit"
+        | "commission"
+        | "payout"
+        | "refund"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -487,6 +630,7 @@ export const Constants = {
       driver_status: ["available", "unavailable", "on_ride"],
       payment_method: ["pix", "card", "cash"],
       payment_status: ["pending", "completed", "refunded"],
+      payout_status: ["pending", "paid", "canceled"],
       ride_status: [
         "REQUESTED",
         "ACCEPTED",
@@ -495,6 +639,13 @@ export const Constants = {
         "IN_PROGRESS",
         "COMPLETED",
         "CANCELED",
+      ],
+      wallet_transaction_type: [
+        "credit",
+        "debit",
+        "commission",
+        "payout",
+        "refund",
       ],
     },
   },
