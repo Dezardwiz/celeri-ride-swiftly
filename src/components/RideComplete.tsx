@@ -6,7 +6,7 @@ interface RideCompleteProps {
   price: number;
   distanceKm: number;
   durationMin: number;
-  onSubmit: (payment: "pix" | "card" | "cash", rating: number) => void;
+  onSubmit: (payment: "pix" | "card" | "cash" | "wallet", rating: number) => void;
   onClose: () => void;
 }
 
