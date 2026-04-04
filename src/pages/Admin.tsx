@@ -84,6 +84,10 @@ const Admin = () => {
               <Wallet className="h-4 w-4" />
               <span className="hidden sm:inline">Financeiro</span>
             </TabsTrigger>
+            <TabsTrigger value="commission" className="flex items-center gap-1 text-xs">
+              <Percent className="h-4 w-4" />
+              <span className="hidden sm:inline">Comissão</span>
+            </TabsTrigger>
             <TabsTrigger value="reports" className="flex items-center gap-1 text-xs">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Relatórios</span>
