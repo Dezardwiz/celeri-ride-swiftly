@@ -1,4 +1,4 @@
-import { Star, X, DollarSign, CreditCard, QrCode } from "lucide-react";
+import { Star, X, DollarSign, CreditCard, QrCode, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 
@@ -6,16 +6,17 @@ interface RideCompleteProps {
   price: number;
   distanceKm: number;
   durationMin: number;
-  onSubmit: (payment: "pix" | "card" | "cash", rating: number) => void;
+  onSubmit: (payment: "pix" | "card" | "cash" | "wallet", rating: number) => void;
   onClose: () => void;
 }
 
 const RideComplete = ({ price, distanceKm, durationMin, onSubmit, onClose }: RideCompleteProps) => {
   const [rating, setRating] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState<"pix" | "card" | "cash">("pix");
+  const [paymentMethod, setPaymentMethod] = useState<"pix" | "card" | "cash" | "wallet">("wallet");
   const [submitted, setSubmitted] = useState(false);
 
   const payments = [
+    { id: "wallet" as const, label: "CARTEIRA", icon: Wallet },
     { id: "pix" as const, label: "PIX", icon: QrCode },
     { id: "card" as const, label: "CARTÃO", icon: CreditCard },
     { id: "cash" as const, label: "DINHEIRO", icon: DollarSign },

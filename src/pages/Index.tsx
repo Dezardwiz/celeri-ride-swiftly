@@ -10,6 +10,7 @@ import RideStatusCard from "@/components/RideStatusCard";
 import RideComplete from "@/components/RideComplete";
 import HistoryScreen from "@/components/HistoryScreen";
 import ProfileScreen from "@/components/ProfileScreen";
+import WalletScreen from "@/components/WalletScreen";
 import { useRide, useActiveTariff, calculatePrice } from "@/hooks/useRide";
 import { MONTES_CLAROS } from "@/lib/geo";
 import { toast } from "sonner";
@@ -41,7 +42,7 @@ function haversine(a: { lat: number; lng: number }, b: { lat: number; lng: numbe
 
 const Index = () => {
   const [screen, setScreen] = useState<AppScreen>("home");
-  const [activeTab, setActiveTab] = useState<"home" | "history" | "profile">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "history" | "wallet" | "profile">("home");
   const [destination, setDestination] = useState("");
   const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -102,9 +103,9 @@ const Index = () => {
   const handleCompleteRide = useCallback(() => setScreen("complete"), []);
 
   const handleRideSubmit = useCallback(
-    async (payment: "pix" | "card" | "cash", rating: number) => {
+    async (payment: "pix" | "card" | "cash" | "wallet", rating: number) => {
       await ride.completeRide(parseFloat(price.toFixed(2)));
-      await ride.savePayment(payment, parseFloat(price.toFixed(2)));
+      await ride.savePayment(payment === "wallet" ? "pix" : payment, parseFloat(price.toFixed(2)));
       if (rating > 0) await ride.saveRating(rating);
     },
     [ride, price]
@@ -118,7 +119,7 @@ const Index = () => {
     ride.resetRide();
   }, [ride]);
 
-  const handleTabChange = useCallback((tab: "home" | "history" | "profile") => {
+  const handleTabChange = useCallback((tab: "home" | "history" | "wallet" | "profile") => {
     setActiveTab(tab);
     if (tab === "home") {
       setScreen("home");
@@ -183,6 +184,7 @@ const Index = () => {
 
       <AnimatePresence>
         {activeTab === "history" && <HistoryScreen key="history" onBack={() => setActiveTab("home")} />}
+        {activeTab === "wallet" && <WalletScreen key="wallet" onBack={() => setActiveTab("home")} />}
         {activeTab === "profile" && <ProfileScreen key="profile" onBack={() => setActiveTab("home")} />}
       </AnimatePresence>
 
