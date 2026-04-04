@@ -10,7 +10,8 @@ import { AdminReports } from "@/components/admin/AdminReports";
 import { AdminPassengers } from "@/components/admin/AdminPassengers";
 import { AdminFinance } from "@/components/admin/AdminFinance";
 import { AdminMap } from "@/components/admin/AdminMap";
-import { Shield, Users, Car, DollarSign, BarChart3, LogOut, UserCheck, Wallet, MapPin } from "lucide-react";
+import { AdminCommission } from "@/components/admin/AdminCommission";
+import { Shield, Users, Car, DollarSign, BarChart3, LogOut, UserCheck, Wallet, MapPin, Percent } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import geleriLogo from "@/assets/geleri-logo.jpeg";
 
