@@ -1,4 +1,4 @@
-import { Star, X, DollarSign, CreditCard, QrCode } from "lucide-react";
+import { Star, X, DollarSign, CreditCard, QrCode, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 
