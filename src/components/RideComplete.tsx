@@ -16,6 +16,7 @@ const RideComplete = ({ price, distanceKm, durationMin, onSubmit, onClose }: Rid
   const [submitted, setSubmitted] = useState(false);
 
   const payments = [
+    { id: "wallet" as const, label: "CARTEIRA", icon: Wallet },
     { id: "pix" as const, label: "PIX", icon: QrCode },
     { id: "card" as const, label: "CARTÃO", icon: CreditCard },
     { id: "cash" as const, label: "DINHEIRO", icon: DollarSign },
