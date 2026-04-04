@@ -10,6 +10,7 @@ import RideStatusCard from "@/components/RideStatusCard";
 import RideComplete from "@/components/RideComplete";
 import HistoryScreen from "@/components/HistoryScreen";
 import ProfileScreen from "@/components/ProfileScreen";
+import WalletScreen from "@/components/WalletScreen";
 import { useRide, useActiveTariff, calculatePrice } from "@/hooks/useRide";
 import { MONTES_CLAROS } from "@/lib/geo";
 import { toast } from "sonner";
