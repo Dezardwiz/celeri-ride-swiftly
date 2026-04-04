@@ -70,9 +70,8 @@ export function useWallet() {
     });
     if (txError) return false;
 
-    // Update balance via admin RPC or direct update
-    // Since users can't update wallets directly, we use the transaction approach
-    // For now we refetch
+    // Update balance
+    await supabase.from("wallets").update({ balance: wallet.balance + amount }).eq("id", wallet.id);
     await fetchWallet();
     return true;
   }, [wallet, fetchWallet]);
