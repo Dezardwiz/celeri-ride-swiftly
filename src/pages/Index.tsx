@@ -42,7 +42,7 @@ function haversine(a: { lat: number; lng: number }, b: { lat: number; lng: numbe
 
 const Index = () => {
   const [screen, setScreen] = useState<AppScreen>("home");
-  const [activeTab, setActiveTab] = useState<"home" | "history" | "profile">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "history" | "wallet" | "profile">("home");
   const [destination, setDestination] = useState("");
   const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
