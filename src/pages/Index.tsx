@@ -119,7 +119,7 @@ const Index = () => {
     ride.resetRide();
   }, [ride]);
 
-  const handleTabChange = useCallback((tab: "home" | "history" | "profile") => {
+  const handleTabChange = useCallback((tab: "home" | "history" | "wallet" | "profile") => {
     setActiveTab(tab);
     if (tab === "home") {
       setScreen("home");
