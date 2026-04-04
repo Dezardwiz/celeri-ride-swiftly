@@ -100,6 +100,7 @@ const Admin = () => {
           <TabsContent value="map"><AdminMap /></TabsContent>
           <TabsContent value="tariffs"><AdminTariffs /></TabsContent>
           <TabsContent value="finance"><AdminFinance /></TabsContent>
+          <TabsContent value="commission"><AdminCommission /></TabsContent>
           <TabsContent value="reports"><AdminReports /></TabsContent>
         </Tabs>
       </div>
