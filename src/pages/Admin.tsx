@@ -59,7 +59,7 @@ const Admin = () => {
 
       <div className="p-4 max-w-6xl mx-auto">
         <Tabs defaultValue="drivers" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 bg-card overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-4 sm:grid-cols-8 bg-card overflow-x-auto">
             <TabsTrigger value="drivers" className="flex items-center gap-1 text-xs">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Motoristas</span>
