@@ -12,7 +12,7 @@ interface RideCompleteProps {
 
 const RideComplete = ({ price, distanceKm, durationMin, onSubmit, onClose }: RideCompleteProps) => {
   const [rating, setRating] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState<"pix" | "card" | "cash">("pix");
+  const [paymentMethod, setPaymentMethod] = useState<"pix" | "card" | "cash" | "wallet">("wallet");
   const [submitted, setSubmitted] = useState(false);
 
   const payments = [
