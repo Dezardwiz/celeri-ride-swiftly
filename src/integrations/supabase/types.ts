@@ -478,6 +478,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      process_ride_payment: {
+        Args: {
+          _amount: number
+          _driver_id: string
+          _passenger_id: string
+          _ride_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "passenger" | "driver" | "admin"
