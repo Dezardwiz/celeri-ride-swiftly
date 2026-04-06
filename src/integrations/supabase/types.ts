@@ -49,6 +49,7 @@ export type Database = {
           paid_at: string | null
           period_end: string | null
           period_start: string | null
+          ride_id: string | null
           status: Database["public"]["Enums"]["payout_status"]
           updated_at: string
         }
@@ -62,6 +63,7 @@ export type Database = {
           paid_at?: string | null
           period_end?: string | null
           period_start?: string | null
+          ride_id?: string | null
           status?: Database["public"]["Enums"]["payout_status"]
           updated_at?: string
         }
@@ -75,6 +77,7 @@ export type Database = {
           paid_at?: string | null
           period_end?: string | null
           period_start?: string | null
+          ride_id?: string | null
           status?: Database["public"]["Enums"]["payout_status"]
           updated_at?: string
         }
@@ -84,6 +87,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_payouts_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
             referencedColumns: ["id"]
           },
         ]

@@ -1,6 +1,7 @@
 import { Star, X, DollarSign, CreditCard, QrCode, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useWallet } from "@/hooks/useWallet";
 
 interface RideCompleteProps {
   price: number;
@@ -14,6 +15,10 @@ const RideComplete = ({ price, distanceKm, durationMin, onSubmit, onClose }: Rid
   const [rating, setRating] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<"pix" | "card" | "cash" | "wallet">("wallet");
   const [submitted, setSubmitted] = useState(false);
+  const { wallet } = useWallet();
+
+  const balance = wallet?.balance ?? 0;
+  const insufficientBalance = paymentMethod === "wallet" && balance < price;
 
   const payments = [
     { id: "wallet" as const, label: "CARTEIRA", icon: Wallet },
@@ -88,7 +93,7 @@ const RideComplete = ({ price, distanceKm, durationMin, onSubmit, onClose }: Rid
                     className={`flex flex-1 flex-col items-center gap-1 rounded-md border py-3 transition-colors ${
                       paymentMethod === p.id
                         ? "border-primary bg-primary/10 text-primary"
-                        : "border-border text-muted-foreground hover:bg-surface-hover"
+                        : "border-border text-muted-foreground hover:bg-accent"
                     }`}
                   >
                     <p.icon size={16} />
@@ -96,6 +101,21 @@ const RideComplete = ({ price, distanceKm, durationMin, onSubmit, onClose }: Rid
                   </button>
                 ))}
               </div>
+
+              {/* Wallet balance indicator */}
+              {paymentMethod === "wallet" && (
+                <div className={`flex items-center justify-between rounded-md px-3 py-2 text-xs ${
+                  insufficientBalance ? "bg-destructive/10 text-destructive" : "bg-primary/5 text-primary"
+                }`}>
+                  <span className="flex items-center gap-1">
+                    <Wallet size={12} />
+                    Saldo: R$ {balance.toFixed(2)}
+                  </span>
+                  {insufficientBalance && (
+                    <span className="font-medium">Saldo insuficiente</span>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -114,7 +134,7 @@ const RideComplete = ({ price, distanceKm, durationMin, onSubmit, onClose }: Rid
 
             <button
               onClick={handleSubmit}
-              disabled={rating === 0}
+              disabled={rating === 0 || insufficientBalance}
               className="w-full rounded-md bg-primary py-3 font-display text-sm uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
             >
               Confirmar Pagamento

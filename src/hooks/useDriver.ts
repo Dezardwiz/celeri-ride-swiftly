@@ -129,9 +129,18 @@ export function useIncomingRides(driverLocation?: { lat: number; lng: number }) 
   return rides;
 }
 
+interface DriverPayout {
+  driver_id: string;
+  gross_amount: number;
+  commission_amount: number;
+  amount: number;
+  reference_ride_id?: string;
+}
+
 export function useDriverEarnings() {
   const { user } = useAuth();
   const [rides, setRides] = useState<Ride[]>([]);
+  const [payouts, setPayouts] = useState<DriverPayout[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -143,14 +152,23 @@ export function useDriverEarnings() {
       .single()
       .then(async ({ data: driver }) => {
         if (!driver) { setLoading(false); return; }
-        const { data } = await supabase
-          .from("rides")
-          .select("*")
-          .eq("driver_id", driver.id)
-          .eq("status", "COMPLETED")
-          .order("completed_at", { ascending: false })
-          .limit(50);
-        if (data) setRides(data);
+        const [ridesRes, payoutsRes] = await Promise.all([
+          supabase
+            .from("rides")
+            .select("*")
+            .eq("driver_id", driver.id)
+            .eq("status", "COMPLETED")
+            .order("completed_at", { ascending: false })
+            .limit(50),
+          supabase
+            .from("driver_payouts")
+            .select("*")
+            .eq("driver_id", driver.id)
+            .order("created_at", { ascending: false })
+            .limit(50),
+        ]);
+        if (ridesRes.data) setRides(ridesRes.data);
+        if (payoutsRes.data) setPayouts(payoutsRes.data as any);
         setLoading(false);
       });
   }, [user]);
@@ -160,5 +178,5 @@ export function useDriverEarnings() {
     .filter((r) => r.completed_at && new Date(r.completed_at).toDateString() === new Date().toDateString())
     .reduce((sum, r) => sum + (r.final_price ?? r.estimated_price ?? 0), 0);
 
-  return { rides, loading, totalEarnings, todayEarnings };
+  return { rides, loading, totalEarnings, todayEarnings, payouts };
 }
