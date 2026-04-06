@@ -97,7 +97,7 @@ const DriverEarnings = () => {
 
       {rides.map((ride) => {
         const grossPrice = ride.final_price ?? ride.estimated_price ?? 0;
-        const payout = payouts.find((p) => p.reference_ride_id === ride.id);
+        const payout = payouts.find((p) => (p as any).ride_id === ride.id);
         const commission = payout?.commission_amount ?? 0;
         const netPrice = payout?.amount ?? grossPrice;
         const date = ride.completed_at ? new Date(ride.completed_at) : new Date(ride.created_at);
