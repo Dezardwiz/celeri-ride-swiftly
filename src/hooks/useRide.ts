@@ -104,6 +104,19 @@ export function useRide() {
         completed_at: new Date().toISOString(),
       })
       .eq("id", currentRide.id);
+
+    // Process automatic wallet transfer if driver is assigned
+    if (currentRide.driver_id) {
+      await supabase.rpc("process_ride_payment", {
+        _ride_id: currentRide.id,
+        _passenger_id: currentRide.passenger_id,
+        _driver_id: currentRide.driver_id,
+        _amount: finalPrice,
+      }).then(({ error }) => {
+        if (error) console.error("Payment processing error:", error);
+      });
+    }
+
     setCurrentRide((r) => (r ? { ...r, status: "COMPLETED", final_price: finalPrice } : null));
   };
 
