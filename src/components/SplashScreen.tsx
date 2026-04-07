@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import geleriLogo from "@/assets/geleri-logo.jpeg";
+import appIcon from "/app-icon.png";
 
 interface SplashScreenProps {
   visible: boolean;
