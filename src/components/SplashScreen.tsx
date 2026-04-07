@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import geleriLogo from "@/assets/geleri-logo.jpeg";
+import appIcon from "/app-icon.png";
 
 interface SplashScreenProps {
   visible: boolean;
@@ -17,7 +17,7 @@ const SplashScreen = ({ visible }: SplashScreenProps) => (
         style={{ backgroundColor: "#000000" }}
       >
         <motion.img
-          src={geleriLogo}
+          src={appIcon}
           alt="Celeri"
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
