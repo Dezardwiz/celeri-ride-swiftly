@@ -1,4 +1,10 @@
-// Simple notification sound using Web Audio API
+import { Capacitor } from "@capacitor/core";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { LocalNotifications } from "@capacitor/local-notifications";
+
+const isNative = Capacitor.isNativePlatform();
+
+// Simple notification sound using Web Audio API (web fallback)
 let audioCtx: AudioContext | null = null;
 
 export function playNotificationSound() {
@@ -12,7 +18,6 @@ export function playNotificationSound() {
     oscillator.connect(gainNode);
     gainNode.connect(audioCtx.destination);
 
-    // Two-tone alert
     oscillator.type = "sine";
     oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
     oscillator.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.15);
@@ -28,17 +33,50 @@ export function playNotificationSound() {
   }
 }
 
-export function vibrate() {
+export async function vibrate() {
   try {
-    if (navigator.vibrate) {
+    if (isNative) {
+      await Haptics.impact({ style: ImpactStyle.Heavy });
+    } else if (navigator.vibrate) {
       navigator.vibrate([200, 100, 200]);
     }
   } catch {
-    // Vibration not supported
+    // Vibration/haptics not supported
   }
 }
 
-export function notifyNewRide() {
+export async function showLocalNotification(title: string, body: string, data?: Record<string, string>) {
+  if (!isNative) return;
+  try {
+    const perm = await LocalNotifications.requestPermissions();
+    if (perm.display !== "granted") return;
+
+    await LocalNotifications.schedule({
+      notifications: [
+        {
+          id: Date.now(),
+          title,
+          body,
+          extra: data,
+          sound: "default",
+          smallIcon: "ic_notification",
+          largeIcon: "ic_launcher",
+        },
+      ],
+    });
+  } catch (e) {
+    console.error("Local notification error:", e);
+  }
+}
+
+export async function notifyNewRide(origin?: string, destination?: string) {
   playNotificationSound();
-  vibrate();
+  await vibrate();
+
+  if (isNative && origin && destination) {
+    await showLocalNotification(
+      "🏍️ Nova corrida disponível!",
+      `${origin} → ${destination}`
+    );
+  }
 }
