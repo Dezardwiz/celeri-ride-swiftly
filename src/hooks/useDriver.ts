@@ -70,20 +70,22 @@ export function useDriverLocation() {
   const [location, setLocation] = useState<{ lat: number; lng: number }>(MONTES_CLAROS.center);
 
   useEffect(() => {
-    if (!navigator.geolocation) return;
-    // Get initial position
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => setLocation(MONTES_CLAROS.center),
-      { enableHighAccuracy: true }
-    );
-    // Watch position
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => {},
-      { enableHighAccuracy: true, maximumAge: 10000 }
-    );
-    return () => navigator.geolocation.clearWatch(watchId);
+    let cleanup: (() => void) | undefined;
+
+    (async () => {
+      const granted = await requestLocationPermission();
+      if (!granted) return;
+
+      const pos = await getCurrentPosition();
+      if (pos) setLocation(pos);
+
+      cleanup = watchPosition(
+        (p) => setLocation(p),
+        () => {}
+      );
+    })();
+
+    return () => cleanup?.();
   }, []);
 
   return location;
