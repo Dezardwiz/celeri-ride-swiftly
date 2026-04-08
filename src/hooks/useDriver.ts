@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Tables } from "@/integrations/supabase/types";
 import { MONTES_CLAROS } from "@/lib/geo";
+import { getCurrentPosition, watchPosition, requestLocationPermission } from "@/lib/geolocation";
 
 type Driver = Tables<"drivers">;
 type Ride = Tables<"rides">;
