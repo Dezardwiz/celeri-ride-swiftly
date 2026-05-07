@@ -8,10 +8,15 @@ import ProfileScreen from "@/components/ProfileScreen";
 import { useActiveRide } from "@/hooks/useActiveRide";
 import { toast } from "sonner";
 import geleriLogo from "@/assets/geleri-logo.jpeg";
+import CancellationDialog from "@/components/CancellationDialog";
+import { useCancellationSettings, estimateCancellationFee, cancelRideRpc } from "@/hooks/useCancellation";
 
 const Driver = () => {
   const [activeTab, setActiveTab] = useState<"home" | "earnings" | "profile">("home");
-  const { ride: activeRide, advanceStatus, completeRide, cancelRide } = useActiveRide();
+  const { ride: activeRide, advanceStatus, completeRide } = useActiveRide();
+  const settings = useCancellationSettings();
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [canceling, setCanceling] = useState(false);
 
   const handleAdvance = async () => {
     await advanceStatus();
@@ -22,9 +27,24 @@ const Driver = () => {
     toast.success("Corrida finalizada!");
   };
 
-  const handleCancel = async () => {
-    await cancelRide();
-    toast.info("Corrida cancelada");
+  const handleCancel = () => setCancelOpen(true);
+
+  const confirmCancel = async (reason: string) => {
+    if (!activeRide) return;
+    setCanceling(true);
+    try {
+      const res = await cancelRideRpc(activeRide.id, "driver", reason);
+      if (res?.fee && res.fee > 0) {
+        toast.warning(`Corrida cancelada — taxa de R$ ${res.fee.toFixed(2)} aplicada`);
+      } else {
+        toast.info("Corrida cancelada");
+      }
+      setCancelOpen(false);
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro ao cancelar");
+    } finally {
+      setCanceling(false);
+    }
   };
 
   return (
@@ -51,6 +71,15 @@ const Driver = () => {
           />
         )}
       </AnimatePresence>
+
+      <CancellationDialog
+        open={cancelOpen}
+        actor="driver"
+        estimatedFee={estimateCancellationFee(activeRide, "driver", settings)}
+        loading={canceling}
+        onConfirm={confirmCancel}
+        onClose={() => setCancelOpen(false)}
+      />
 
       {/* Content - only shown when no active ride */}
       {!activeRide && (
