@@ -1,4 +1,4 @@
-import { Phone, MessageCircle, Star, Navigation } from "lucide-react";
+import { Phone, MessageCircle, Star, Navigation, X } from "lucide-react";
 import { motion } from "framer-motion";
 
 type RideStatus = "accepted" | "arriving" | "arrived" | "in_progress";
@@ -7,6 +7,7 @@ interface RideStatusCardProps {
   status: RideStatus;
   onAdvance: () => void;
   onComplete: () => void;
+  onCancel?: () => void;
 }
 
 const statusConfig: Record<RideStatus, { label: string; sublabel: string; color: string }> = {
@@ -24,7 +25,7 @@ const driver = {
   avatar: "CS",
 };
 
-const RideStatusCard = ({ status, onAdvance, onComplete }: RideStatusCardProps) => {
+const RideStatusCard = ({ status, onAdvance, onComplete, onCancel }: RideStatusCardProps) => {
   const config = statusConfig[status];
   const isInProgress = status === "in_progress";
 
@@ -93,12 +94,22 @@ const RideStatusCard = ({ status, onAdvance, onComplete }: RideStatusCardProps) 
               Finalizar Corrida
             </button>
           ) : (
-            <button
-              onClick={onAdvance}
-              className="w-full rounded-md border border-border py-3 font-display text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:bg-surface-hover"
-            >
-              Simular Próximo Estado →
-            </button>
+            <div className="flex gap-2">
+              {onCancel && (
+                <button
+                  onClick={onCancel}
+                  className="flex items-center justify-center gap-1 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-3 font-display text-xs uppercase tracking-wider text-destructive transition-colors hover:bg-destructive/20"
+                >
+                  <X size={14} /> Cancelar
+                </button>
+              )}
+              <button
+                onClick={onAdvance}
+                className="flex-1 rounded-md border border-border py-3 font-display text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:bg-surface-hover"
+              >
+                Simular Próximo Estado →
+              </button>
+            </div>
           )}
         </div>
       </div>

@@ -11,7 +11,8 @@ import { AdminPassengers } from "@/components/admin/AdminPassengers";
 import { AdminFinance } from "@/components/admin/AdminFinance";
 import { AdminMap } from "@/components/admin/AdminMap";
 import { AdminCommission } from "@/components/admin/AdminCommission";
-import { Shield, Users, Car, DollarSign, BarChart3, LogOut, UserCheck, Wallet, MapPin, Percent } from "lucide-react";
+import { AdminCancellations } from "@/components/admin/AdminCancellations";
+import { Shield, Users, Car, DollarSign, BarChart3, LogOut, UserCheck, Wallet, MapPin, Percent, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import geleriLogo from "@/assets/geleri-logo.jpeg";
 
@@ -59,7 +60,7 @@ const Admin = () => {
 
       <div className="p-4 max-w-6xl mx-auto">
         <Tabs defaultValue="drivers" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 sm:grid-cols-8 bg-card overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-9 bg-card overflow-x-auto">
             <TabsTrigger value="drivers" className="flex items-center gap-1 text-xs">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Motoristas</span>
@@ -88,6 +89,10 @@ const Admin = () => {
               <Percent className="h-4 w-4" />
               <span className="hidden sm:inline">Comissão</span>
             </TabsTrigger>
+            <TabsTrigger value="cancellations" className="flex items-center gap-1 text-xs">
+              <Ban className="h-4 w-4" />
+              <span className="hidden sm:inline">Cancelamentos</span>
+            </TabsTrigger>
             <TabsTrigger value="reports" className="flex items-center gap-1 text-xs">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Relatórios</span>
@@ -101,6 +106,7 @@ const Admin = () => {
           <TabsContent value="tariffs"><AdminTariffs /></TabsContent>
           <TabsContent value="finance"><AdminFinance /></TabsContent>
           <TabsContent value="commission"><AdminCommission /></TabsContent>
+          <TabsContent value="cancellations"><AdminCancellations /></TabsContent>
           <TabsContent value="reports"><AdminReports /></TabsContent>
         </Tabs>
       </div>
