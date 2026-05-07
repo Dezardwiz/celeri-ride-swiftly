@@ -14,6 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      cancellation_settings: {
+        Row: {
+          driver_fee_after_accept: number
+          free_window_seconds: number
+          id: string
+          is_active: boolean
+          passenger_fee_after_arrived: number
+          updated_at: string
+        }
+        Insert: {
+          driver_fee_after_accept?: number
+          free_window_seconds?: number
+          id?: string
+          is_active?: boolean
+          passenger_fee_after_arrived?: number
+          updated_at?: string
+        }
+        Update: {
+          driver_fee_after_accept?: number
+          free_window_seconds?: number
+          id?: string
+          is_active?: boolean
+          passenger_fee_after_arrived?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cancellations: {
+        Row: {
+          canceled_by: string
+          created_at: string
+          driver_id: string | null
+          fee_amount: number
+          id: string
+          reason: string
+          ride_id: string
+          ride_status_at_cancel: string
+          seconds_since_accept: number | null
+          user_id: string
+        }
+        Insert: {
+          canceled_by: string
+          created_at?: string
+          driver_id?: string | null
+          fee_amount?: number
+          id?: string
+          reason: string
+          ride_id: string
+          ride_status_at_cancel: string
+          seconds_since_accept?: number | null
+          user_id: string
+        }
+        Update: {
+          canceled_by?: string
+          created_at?: string
+          driver_id?: string | null
+          fee_amount?: number
+          id?: string
+          reason?: string
+          ride_id?: string
+          ride_status_at_cancel?: string
+          seconds_since_accept?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cancellations_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commission_settings: {
         Row: {
           created_at: string
@@ -284,8 +358,11 @@ export type Database = {
       }
       rides: {
         Row: {
+          accepted_at: string | null
           canceled_at: string | null
+          canceled_by: string | null
           cancellation_fee: number | null
+          cancellation_reason: string | null
           completed_at: string | null
           created_at: string
           destination_address: string
@@ -306,8 +383,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          accepted_at?: string | null
           canceled_at?: string | null
+          canceled_by?: string | null
           cancellation_fee?: number | null
+          cancellation_reason?: string | null
           completed_at?: string | null
           created_at?: string
           destination_address: string
@@ -328,8 +408,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          accepted_at?: string | null
           canceled_at?: string | null
+          canceled_by?: string | null
           cancellation_fee?: number | null
+          cancellation_reason?: string | null
           completed_at?: string | null
           created_at?: string
           destination_address?: string
@@ -481,6 +564,10 @@ export type Database = {
     }
     Functions: {
       assign_driver_role: { Args: { _user_id: string }; Returns: undefined }
+      cancel_ride: {
+        Args: { _canceled_by: string; _reason: string; _ride_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
