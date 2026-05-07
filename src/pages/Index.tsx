@@ -15,6 +15,8 @@ import { useRide, useActiveTariff, calculatePrice } from "@/hooks/useRide";
 import { MONTES_CLAROS } from "@/lib/geo";
 import { toast } from "sonner";
 import geleriLogo from "@/assets/geleri-logo.jpeg";
+import CancellationDialog from "@/components/CancellationDialog";
+import { useCancellationSettings, estimateCancellationFee, cancelRideRpc } from "@/hooks/useCancellation";
 
 type AppScreen =
   | "home"
@@ -49,6 +51,9 @@ const Index = () => {
 
   const tariff = useActiveTariff();
   const ride = useRide();
+  const settings = useCancellationSettings();
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [canceling, setCanceling] = useState(false);
 
   // Estimated values
   const distanceKm = userLocation && dropoffCoords ? haversine(userLocation, dropoffCoords) * 1.3 : 0; // 1.3 road factor
@@ -119,6 +124,33 @@ const Index = () => {
     ride.resetRide();
   }, [ride]);
 
+  const requestCancel = useCallback(() => {
+    if (ride.currentRide) setCancelOpen(true);
+    else handleReset();
+  }, [ride.currentRide, handleReset]);
+
+  const confirmCancel = useCallback(
+    async (reason: string) => {
+      if (!ride.currentRide) return;
+      setCanceling(true);
+      try {
+        const res = await cancelRideRpc(ride.currentRide.id, "passenger", reason);
+        if (res?.fee && res.fee > 0) {
+          toast.warning(`Corrida cancelada — taxa de R$ ${res.fee.toFixed(2)} aplicada`);
+        } else {
+          toast.info("Corrida cancelada");
+        }
+        setCancelOpen(false);
+        handleReset();
+      } catch (e: any) {
+        toast.error(e.message ?? "Erro ao cancelar");
+      } finally {
+        setCanceling(false);
+      }
+    },
+    [ride.currentRide, handleReset]
+  );
+
   const handleTabChange = useCallback((tab: "home" | "history" | "wallet" | "profile") => {
     setActiveTab(tab);
     if (tab === "home") {
@@ -168,7 +200,7 @@ const Index = () => {
         )}
         {screen === "searching" && <SearchingDriver key="searching" onFound={handleDriverFound} />}
         {(screen === "accepted" || screen === "arriving" || screen === "arrived" || screen === "in_progress") && (
-          <RideStatusCard key="ride-status" status={screen} onAdvance={handleAdvanceStatus} onComplete={handleCompleteRide} />
+          <RideStatusCard key="ride-status" status={screen} onAdvance={handleAdvanceStatus} onComplete={handleCompleteRide} onCancel={requestCancel} />
         )}
         {screen === "complete" && (
           <RideComplete
@@ -189,6 +221,15 @@ const Index = () => {
       </AnimatePresence>
 
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+
+      <CancellationDialog
+        open={cancelOpen}
+        actor="passenger"
+        estimatedFee={estimateCancellationFee(ride.currentRide as any, "passenger", settings)}
+        loading={canceling}
+        onConfirm={confirmCancel}
+        onClose={() => setCancelOpen(false)}
+      />
     </div>
   );
 };
