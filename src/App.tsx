@@ -13,6 +13,7 @@ import Driver from "./pages/Driver.tsx";
 import DriverOnboarding from "./pages/DriverOnboarding.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Admin from "./pages/Admin.tsx";
+import SharedRide from "./pages/SharedRide.tsx";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +77,9 @@ const AppContent = () => {
 
           {/* Admin route */}
           <Route path="/admin" element={<Admin />} />
+
+          {/* Public share route (no auth required) */}
+          <Route path="/share/:rideId" element={<SharedRide />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Tables } from "@/integrations/supabase/types";
@@ -45,6 +45,24 @@ export function useRide() {
   const { user } = useAuth();
   const [currentRide, setCurrentRide] = useState<Ride | null>(null);
   const [loading, setLoading] = useState(false);
+  const channelRef = useRef<any>(null);
+
+  // Subscribe to changes on the current ride so we get driver_id, status, etc. in realtime.
+  useEffect(() => {
+    if (!currentRide?.id) return;
+    const ch = supabase
+      .channel(`ride-${currentRide.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "rides", filter: `id=eq.${currentRide.id}` },
+        (payload) => {
+          setCurrentRide((prev) => (prev ? ({ ...prev, ...(payload.new as Ride) }) : (payload.new as Ride)));
+        }
+      )
+      .subscribe();
+    channelRef.current = ch;
+    return () => { supabase.removeChannel(ch); };
+  }, [currentRide?.id]);
 
   const createRide = async (params: {
     originAddress: string;
