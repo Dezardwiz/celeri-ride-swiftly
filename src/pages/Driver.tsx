@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { AnimatePresence, motion } from "framer-motion";
 import DriverHome from "@/components/driver/DriverHome";
 import DriverEarnings from "@/components/driver/DriverEarnings";
@@ -12,11 +15,29 @@ import CancellationDialog from "@/components/CancellationDialog";
 import { useCancellationSettings, estimateCancellationFee, cancelRideRpc } from "@/hooks/useCancellation";
 
 const Driver = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"home" | "earnings" | "profile">("home");
   const { ride: activeRide, advanceStatus, completeRide } = useActiveRide();
   const settings = useCancellationSettings();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [canceling, setCanceling] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("drivers")
+      .select("onboarding_status, is_approved")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) return;
+        const status = (data as any).onboarding_status;
+        if (status && status !== "approved" && !data.is_approved) {
+          navigate("/driver/onboarding", { replace: true });
+        }
+      });
+  }, [user, navigate]);
 
   const handleAdvance = async () => {
     await advanceStatus();

@@ -10,6 +10,7 @@ import Index from "./pages/Index.tsx";
 import Auth from "./pages/Auth.tsx";
 import DriverAuth from "./pages/DriverAuth.tsx";
 import Driver from "./pages/Driver.tsx";
+import DriverOnboarding from "./pages/DriverOnboarding.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Admin from "./pages/Admin.tsx";
 
@@ -70,6 +71,7 @@ const AppContent = () => {
 
           {/* Driver routes */}
           <Route path="/driver/auth" element={<DriverAuthRoute><DriverAuth /></DriverAuthRoute>} />
+          <Route path="/driver/onboarding" element={<DriverProtectedRoute><DriverOnboarding /></DriverProtectedRoute>} />
           <Route path="/driver" element={<DriverProtectedRoute><Driver /></DriverProtectedRoute>} />
 
           {/* Admin route */}

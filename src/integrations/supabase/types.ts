@@ -112,6 +112,53 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_documents: {
+        Row: {
+          created_at: string
+          driver_id: string
+          file_path: string
+          id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["driver_document_status"]
+          type: Database["public"]["Enums"]["driver_document_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          file_path: string
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["driver_document_status"]
+          type: Database["public"]["Enums"]["driver_document_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          file_path?: string
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["driver_document_status"]
+          type?: Database["public"]["Enums"]["driver_document_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_documents_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_payouts: {
         Row: {
           amount: number
@@ -181,9 +228,11 @@ export type Database = {
           location_lat: number | null
           location_lng: number | null
           moto_model: string
+          onboarding_status: Database["public"]["Enums"]["driver_onboarding_status"]
           photo_url: string | null
           plate: string
           rating_avg: number | null
+          rejection_reason: string | null
           status: Database["public"]["Enums"]["driver_status"]
           total_rides: number | null
           updated_at: string
@@ -197,9 +246,11 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           moto_model: string
+          onboarding_status?: Database["public"]["Enums"]["driver_onboarding_status"]
           photo_url?: string | null
           plate: string
           rating_avg?: number | null
+          rejection_reason?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           total_rides?: number | null
           updated_at?: string
@@ -213,9 +264,11 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           moto_model?: string
+          onboarding_status?: Database["public"]["Enums"]["driver_onboarding_status"]
           photo_url?: string | null
           plate?: string
           rating_avg?: number | null
+          rejection_reason?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           total_rides?: number | null
           updated_at?: string
@@ -587,6 +640,19 @@ export type Database = {
     }
     Enums: {
       app_role: "passenger" | "driver" | "admin"
+      driver_document_status: "pending" | "approved" | "rejected"
+      driver_document_type:
+        | "cnh_front"
+        | "cnh_back"
+        | "crlv"
+        | "selfie_with_doc"
+        | "moto_front"
+        | "moto_plate"
+      driver_onboarding_status:
+        | "pending_documents"
+        | "in_review"
+        | "approved"
+        | "rejected"
       driver_status: "available" | "unavailable" | "on_ride"
       payment_method: "pix" | "card" | "cash"
       payment_status: "pending" | "completed" | "refunded"
@@ -733,6 +799,21 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["passenger", "driver", "admin"],
+      driver_document_status: ["pending", "approved", "rejected"],
+      driver_document_type: [
+        "cnh_front",
+        "cnh_back",
+        "crlv",
+        "selfie_with_doc",
+        "moto_front",
+        "moto_plate",
+      ],
+      driver_onboarding_status: [
+        "pending_documents",
+        "in_review",
+        "approved",
+        "rejected",
+      ],
       driver_status: ["available", "unavailable", "on_ride"],
       payment_method: ["pix", "card", "cash"],
       payment_status: ["pending", "completed", "refunded"],

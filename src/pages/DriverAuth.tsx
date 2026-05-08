@@ -74,8 +74,8 @@ const DriverAuth = () => {
     if (driverError) {
       toast.error("Erro ao registrar mototaxista: " + driverError.message);
     } else {
-      toast.success("Cadastro realizado! Aguarde aprovação do administrador.");
-      navigate("/driver");
+      toast.success("Cadastro criado! Envie seus documentos para análise.");
+      navigate("/driver/onboarding");
     }
     setLoading(false);
   };
