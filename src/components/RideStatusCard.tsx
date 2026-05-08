@@ -1,5 +1,7 @@
-import { Phone, MessageCircle, Star, Navigation, X } from "lucide-react";
+import { Phone, MessageCircle, Star, Navigation, X, Share2, User } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
+import type { DriverInfo } from "@/hooks/useDriverInfo";
 
 type RideStatus = "accepted" | "arriving" | "arrived" | "in_progress";
 
@@ -8,26 +10,49 @@ interface RideStatusCardProps {
   onAdvance: () => void;
   onComplete: () => void;
   onCancel?: () => void;
+  driver?: DriverInfo | null;
+  etaMin?: number | null;
+  rideId?: string;
 }
 
-const statusConfig: Record<RideStatus, { label: string; sublabel: string; color: string }> = {
-  accepted: { label: "Corrida Aceita", sublabel: "Mototaxista a caminho", color: "text-primary" },
-  arriving: { label: "Aproximando-se", sublabel: "Chegando em 2 min", color: "text-primary" },
-  arrived: { label: "Chegou!", sublabel: "Seu mototaxista está esperando", color: "text-success" },
-  in_progress: { label: "Em Andamento", sublabel: "Aproveite a corrida", color: "text-primary" },
-};
-
-const driver = {
-  name: "Carlos Silva",
-  rating: 4.9,
-  plate: "MAO-2B45",
-  model: "Honda CG 160",
-  avatar: "CS",
-};
-
-const RideStatusCard = ({ status, onAdvance, onComplete, onCancel }: RideStatusCardProps) => {
-  const config = statusConfig[status];
+const RideStatusCard = ({ status, onAdvance, onComplete, onCancel, driver, etaMin, rideId }: RideStatusCardProps) => {
+  const labels: Record<RideStatus, { label: string; color: string }> = {
+    accepted: { label: "Corrida Aceita", color: "text-primary" },
+    arriving: { label: "Aproximando-se", color: "text-primary" },
+    arrived: { label: "Chegou!", color: "text-success" },
+    in_progress: { label: "Em Andamento", color: "text-primary" },
+  };
+  const sublabel =
+    status === "arrived"
+      ? "Seu mototaxista está esperando"
+      : status === "in_progress"
+      ? "Aproveite a corrida"
+      : etaMin != null
+      ? `Chegando em ${etaMin} min`
+      : "Mototaxista a caminho";
+  const config = labels[status];
   const isInProgress = status === "in_progress";
+  const initials = (driver?.name ?? "MT")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
+
+  const handleShare = async () => {
+    if (!rideId) return;
+    const url = `${window.location.origin}/share/${rideId}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Acompanhe minha corrida", text: "Acompanhe minha corrida em tempo real:", url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copiado!");
+      }
+    } catch {
+      /* ignore */
+    }
+  };
 
   return (
     <motion.div
@@ -46,30 +71,43 @@ const RideStatusCard = ({ status, onAdvance, onComplete, onCancel }: RideStatusC
               {config.label}
             </span>
           </div>
-          <span className="text-xs text-muted-foreground">{config.sublabel}</span>
+          <span className="text-xs text-muted-foreground">{sublabel}</span>
         </div>
 
         {/* Driver info */}
         <div className="p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary font-display text-sm text-primary-foreground">
-                {driver.avatar}
-              </div>
+              {driver?.photo_url ? (
+                <img src={driver.photo_url} alt={driver.name} className="h-10 w-10 rounded-full object-cover" />
+              ) : (
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary font-display text-sm text-primary-foreground">
+                  {initials || <User size={16} />}
+                </div>
+              )}
               <div>
-                <p className="text-sm font-medium text-foreground">{driver.name}</p>
+                <p className="text-sm font-medium text-foreground">{driver?.name ?? "Procurando mototaxista..."}</p>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
                     <Star size={10} className="text-warning fill-warning" />
-                    <span className="text-xs text-muted-foreground">{driver.rating}</span>
+                    <span className="text-xs text-muted-foreground">{(driver?.rating ?? 0).toFixed(1)}</span>
                   </div>
                   <span className="text-xs text-muted-foreground">·</span>
-                  <span className="text-xs text-muted-foreground">{driver.plate}</span>
+                  <span className="text-xs text-muted-foreground">{driver?.plate ?? "—"}</span>
                 </div>
               </div>
             </div>
 
             <div className="flex gap-2">
+              {rideId && (
+                <button
+                  onClick={handleShare}
+                  title="Compartilhar corrida"
+                  className="rounded-full border border-border p-2 text-muted-foreground hover:bg-surface-hover transition-colors"
+                >
+                  <Share2 size={16} />
+                </button>
+              )}
               <button className="rounded-full border border-border p-2 text-muted-foreground hover:bg-surface-hover transition-colors">
                 <MessageCircle size={16} />
               </button>
@@ -81,8 +119,8 @@ const RideStatusCard = ({ status, onAdvance, onComplete, onCancel }: RideStatusC
 
           <div className="flex items-center gap-2 rounded-md bg-input px-3 py-2">
             <Navigation size={12} className="text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">{driver.model}</span>
-            <span className="ml-auto text-xs font-medium text-foreground">{driver.plate}</span>
+            <span className="text-xs text-muted-foreground">{driver?.moto_model ?? "—"}</span>
+            <span className="ml-auto text-xs font-medium text-foreground">{driver?.plate ?? "—"}</span>
           </div>
 
           {/* Action button */}
