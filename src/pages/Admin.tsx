@@ -12,7 +12,8 @@ import { AdminFinance } from "@/components/admin/AdminFinance";
 import { AdminMap } from "@/components/admin/AdminMap";
 import { AdminCommission } from "@/components/admin/AdminCommission";
 import { AdminCancellations } from "@/components/admin/AdminCancellations";
-import { Shield, Users, Car, DollarSign, BarChart3, LogOut, UserCheck, Wallet, MapPin, Percent, Ban } from "lucide-react";
+import { AdminDriverVerification } from "@/components/admin/AdminDriverVerification";
+import { Shield, Users, Car, DollarSign, BarChart3, LogOut, UserCheck, Wallet, MapPin, Percent, Ban, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import geleriLogo from "@/assets/geleri-logo.jpeg";
 
@@ -60,10 +61,14 @@ const Admin = () => {
 
       <div className="p-4 max-w-6xl mx-auto">
         <Tabs defaultValue="drivers" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-9 bg-card overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-10 bg-card overflow-x-auto">
             <TabsTrigger value="drivers" className="flex items-center gap-1 text-xs">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Motoristas</span>
+            </TabsTrigger>
+            <TabsTrigger value="verification" className="flex items-center gap-1 text-xs">
+              <BadgeCheck className="h-4 w-4" />
+              <span className="hidden sm:inline">Verificação</span>
             </TabsTrigger>
             <TabsTrigger value="passengers" className="flex items-center gap-1 text-xs">
               <UserCheck className="h-4 w-4" />
@@ -100,6 +105,7 @@ const Admin = () => {
           </TabsList>
 
           <TabsContent value="drivers"><AdminDrivers /></TabsContent>
+          <TabsContent value="verification"><AdminDriverVerification /></TabsContent>
           <TabsContent value="passengers"><AdminPassengers /></TabsContent>
           <TabsContent value="rides"><AdminRides /></TabsContent>
           <TabsContent value="map"><AdminMap /></TabsContent>
