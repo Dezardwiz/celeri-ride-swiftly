@@ -495,6 +495,69 @@ export type Database = {
           },
         ]
       }
+      saved_places: {
+        Row: {
+          address: string
+          category: string
+          created_at: string
+          id: string
+          label: string
+          lat: number
+          lng: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          category?: string
+          created_at?: string
+          id?: string
+          label: string
+          lat: number
+          lng: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          category?: string
+          created_at?: string
+          id?: string
+          label?: string
+          lat?: number
+          lng?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      search_history: {
+        Row: {
+          address: string
+          id: string
+          lat: number | null
+          lng: number | null
+          searched_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          searched_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          searched_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tariffs: {
         Row: {
           base_fare: number
@@ -621,6 +684,7 @@ export type Database = {
         Args: { _canceled_by: string; _reason: string; _ride_id: string }
         Returns: Json
       }
+      get_shared_ride: { Args: { _ride_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
