@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import geleriLogo from "@/assets/geleri-logo.jpeg";
 import CancellationDialog from "@/components/CancellationDialog";
 import { useCancellationSettings, estimateCancellationFee, cancelRideRpc } from "@/hooks/useCancellation";
+import { useDriverInfo, estimateEtaMin } from "@/hooks/useDriverInfo";
+import { useSavedPlaces } from "@/hooks/useSavedPlaces";
 
 type AppScreen =
   | "home"
@@ -52,6 +54,9 @@ const Index = () => {
   const tariff = useActiveTariff();
   const ride = useRide();
   const settings = useCancellationSettings();
+  const savedPlaces = useSavedPlaces();
+  const assignedDriver = useDriverInfo(ride.currentRide?.driver_id ?? null);
+  const etaToPickup = estimateEtaMin(assignedDriver, userLocation);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [canceling, setCanceling] = useState(false);
 
@@ -73,7 +78,8 @@ const Index = () => {
     setDestination(dest);
     if (coords) setDropoffCoords(coords);
     setScreen("confirm");
-  }, []);
+    savedPlaces.recordSearch(dest, coords?.lat, coords?.lng);
+  }, [savedPlaces]);
 
   const handleConfirmRide = useCallback(async () => {
     if (!userLocation || !dropoffCoords) return;
@@ -184,7 +190,16 @@ const Index = () => {
           <WhereToInput key="where-to" onFocus={() => setScreen("search")} />
         )}
         {screen === "search" && (
-          <DestinationSearch key="search" onBack={() => setScreen("home")} onSelect={handleDestinationSelect} userLocation={userLocation} />
+          <DestinationSearch
+            key="search"
+            onBack={() => setScreen("home")}
+            onSelect={handleDestinationSelect}
+            userLocation={userLocation}
+            savedPlaces={savedPlaces.places}
+            history={savedPlaces.history}
+            onSaveCurrent={savedPlaces.addPlace}
+            onDeletePlace={savedPlaces.deletePlace}
+          />
         )}
         {screen === "confirm" && (
           <RideConfirmCard
@@ -200,7 +215,16 @@ const Index = () => {
         )}
         {screen === "searching" && <SearchingDriver key="searching" onFound={handleDriverFound} />}
         {(screen === "accepted" || screen === "arriving" || screen === "arrived" || screen === "in_progress") && (
-          <RideStatusCard key="ride-status" status={screen} onAdvance={handleAdvanceStatus} onComplete={handleCompleteRide} onCancel={requestCancel} />
+          <RideStatusCard
+            key="ride-status"
+            status={screen}
+            onAdvance={handleAdvanceStatus}
+            onComplete={handleCompleteRide}
+            onCancel={requestCancel}
+            driver={assignedDriver}
+            etaMin={etaToPickup}
+            rideId={ride.currentRide?.id}
+          />
         )}
         {screen === "complete" && (
           <RideComplete
