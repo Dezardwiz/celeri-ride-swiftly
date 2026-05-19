@@ -1,23 +1,46 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Power, MapPin, Navigation, Clock, DollarSign, Loader2, BellRing } from "lucide-react";
+import { Power, MapPin, Navigation, Clock, DollarSign, Loader2, BellRing, Coffee, Percent } from "lucide-react";
 import { useDriver, useIncomingRides, useDriverLocation } from "@/hooks/useDriver";
+import { useCommissionPct } from "@/hooks/useCommissionPct";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { notifyNewRide } from "@/lib/notifications";
+import RestModeDialog from "@/components/driver/RestModeDialog";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Ride = Tables<"rides">;
 
+function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const R = 6371;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const x =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+}
+
 const DriverHome = () => {
-  const { driver, loading: driverLoading, updateStatus, updateLocation } = useDriver();
+  const { driver, loading: driverLoading, updateStatus, updateLocation, setRestUntil } = useDriver();
   const driverLocation = useDriverLocation();
   const incomingRides = useIncomingRides(driverLocation);
+  const commissionPct = useCommissionPct();
   const { isSupported: pushSupported, isSubscribed: pushSubscribed, subscribe: subscribePush } = usePushNotifications();
   const isOnline = driver?.status === "available";
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const prevRideCountRef = useRef(incomingRides.length);
+  const [restOpen, setRestOpen] = useState(false);
+
+  const restUntil = (driver as any)?.rest_until as string | null | undefined;
+  const isResting = !!restUntil && new Date(restUntil).getTime() > Date.now();
+
+  // Hide incoming rides while resting
+  const visibleRides = useMemo(
+    () => (isResting ? [] : incomingRides),
+    [incomingRides, isResting]
+  );
 
   // Auto-subscribe to push notifications when going online
   useEffect(() => {
@@ -28,14 +51,14 @@ const DriverHome = () => {
 
   // Notify on new incoming rides
   useEffect(() => {
-    if (isOnline && incomingRides.length > prevRideCountRef.current) {
+    if (isOnline && !isResting && visibleRides.length > prevRideCountRef.current) {
       notifyNewRide();
       toast("🏍️ Nova corrida disponível!", {
         description: "Uma nova corrida apareceu próxima a você",
       });
     }
-    prevRideCountRef.current = incomingRides.length;
-  }, [incomingRides.length, isOnline]);
+    prevRideCountRef.current = visibleRides.length;
+  }, [visibleRides.length, isOnline, isResting]);
 
   // Update driver location periodically when online
   useEffect(() => {
@@ -112,10 +135,31 @@ const DriverHome = () => {
         />
       </motion.button>
 
+      {/* Rest mode button (only when online) */}
+      {isOnline && (
+        <motion.button
+          onClick={() => setRestOpen(true)}
+          whileTap={{ scale: 0.97 }}
+          className={`flex items-center justify-between rounded-xl border px-4 py-3 ${
+            isResting
+              ? "border-amber-500/30 bg-amber-500/10 text-amber-400"
+              : "border-border bg-card text-muted-foreground"
+          }`}
+        >
+          <span className="flex items-center gap-2 font-display text-xs uppercase tracking-wider">
+            <Coffee size={14} />
+            {isResting
+              ? `Em descanso — ${Math.max(0, Math.round((new Date(restUntil!).getTime() - Date.now()) / 60000))} min`
+              : "Modo descanso"}
+          </span>
+          <span className="text-xs">{isResting ? "Encerrar" : "Pausar corridas"}</span>
+        </motion.button>
+      )}
+
       {/* Incoming rides */}
       <div>
         <h3 className="font-display text-xs uppercase tracking-wider text-muted-foreground mb-3">
-          Corridas próximas ({incomingRides.length})
+          Corridas próximas ({visibleRides.length})
         </h3>
 
         {!isOnline && (
@@ -124,16 +168,30 @@ const DriverHome = () => {
           </div>
         )}
 
-        {isOnline && incomingRides.length === 0 && (
+        {isOnline && !isResting && visibleRides.length === 0 && (
           <div className="rounded-xl border border-border bg-card p-6 text-center">
             <Navigation className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
             <p className="text-sm text-muted-foreground">Aguardando novas corridas próximas...</p>
           </div>
         )}
 
+        {isOnline && isResting && (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-6 text-center">
+            <Coffee className="mx-auto mb-2 h-8 w-8 text-amber-400/70" />
+            <p className="text-sm text-amber-400">Você está em modo descanso. Novas corridas estão pausadas.</p>
+          </div>
+        )}
+
         <AnimatePresence>
-          {isOnline &&
-            incomingRides.map((ride) => (
+          {isOnline && !isResting &&
+            visibleRides.map((ride) => {
+              const gross = ride.estimated_price ?? 0;
+              const net = gross * (1 - commissionPct / 100);
+              const pickupKm =
+                ride.origin_lat != null && ride.origin_lng != null
+                  ? haversineKm(driverLocation, { lat: ride.origin_lat, lng: ride.origin_lng })
+                  : null;
+              return (
               <motion.div
                 key={ride.id}
                 initial={{ opacity: 0, y: 12 }}
@@ -141,6 +199,12 @@ const DriverHome = () => {
                 exit={{ opacity: 0, y: -12 }}
                 className="mb-3 rounded-xl border border-border bg-card p-4"
               >
+                {pickupKm != null && (
+                  <div className="mb-2 flex items-center gap-1 text-[11px] font-display uppercase tracking-wider text-primary">
+                    <Navigation size={12} />
+                    {pickupKm.toFixed(1)} km até o passageiro
+                  </div>
+                )}
                 <div className="flex items-start gap-3">
                   <div className="flex flex-col items-center gap-1 pt-1">
                     <div className="h-2.5 w-2.5 rounded-full bg-primary" />
@@ -170,8 +234,17 @@ const DriverHome = () => {
                   </div>
                   <div className="ml-auto flex items-center gap-1 font-display text-sm text-primary">
                     <DollarSign size={14} />
-                    R$ {(ride.estimated_price ?? 0).toFixed(2)}
+                    R$ {gross.toFixed(2)}
                   </div>
+                </div>
+
+                <div className="mt-2 flex items-center justify-between rounded-lg bg-muted/30 px-3 py-2 text-xs">
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    <Percent size={11} /> Comissão {commissionPct}%
+                  </span>
+                  <span className="font-display text-emerald-400 tabular-nums">
+                    Líquido R$ {net.toFixed(2)}
+                  </span>
                 </div>
 
                 <motion.button
@@ -187,9 +260,18 @@ const DriverHome = () => {
                   )}
                 </motion.button>
               </motion.div>
-            ))}
+            );})}
         </AnimatePresence>
       </div>
+
+      <RestModeDialog
+        open={restOpen}
+        onClose={() => setRestOpen(false)}
+        isResting={isResting}
+        restUntil={restUntil}
+        onConfirm={(min) => setRestUntil(new Date(Date.now() + min * 60000))}
+        onStop={() => setRestUntil(null)}
+      />
     </div>
   );
 };

@@ -63,7 +63,20 @@ export function useDriver() {
     [driver]
   );
 
-  return { driver, loading, updateStatus, updateLocation };
+  const setRestUntil = useCallback(
+    async (until: Date | null) => {
+      if (!driver) return;
+      const value = until ? until.toISOString() : null;
+      const { error } = await supabase
+        .from("drivers")
+        .update({ rest_until: value } as any)
+        .eq("id", driver.id);
+      if (!error) setDriver((d) => (d ? ({ ...d, rest_until: value } as Driver) : null));
+    },
+    [driver]
+  );
+
+  return { driver, loading, updateStatus, updateLocation, setRestUntil };
 }
 
 export function useDriverLocation() {

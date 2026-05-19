@@ -233,6 +233,7 @@ export type Database = {
           plate: string
           rating_avg: number | null
           rejection_reason: string | null
+          rest_until: string | null
           status: Database["public"]["Enums"]["driver_status"]
           total_rides: number | null
           updated_at: string
@@ -251,6 +252,7 @@ export type Database = {
           plate: string
           rating_avg?: number | null
           rejection_reason?: string | null
+          rest_until?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           total_rides?: number | null
           updated_at?: string
@@ -269,6 +271,7 @@ export type Database = {
           plate?: string
           rating_avg?: number | null
           rejection_reason?: string | null
+          rest_until?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           total_rides?: number | null
           updated_at?: string

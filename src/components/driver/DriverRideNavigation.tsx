@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import L from "leaflet";
 import { MONTES_CLAROS } from "@/lib/geo";
 import { fetchRoute } from "@/lib/routing";
-import { Navigation, Phone, X, ChevronRight, CheckCircle2, MapPin, Loader2 } from "lucide-react";
+import { Navigation, Phone, X, ChevronRight, CheckCircle2, MapPin, Loader2, ExternalLink } from "lucide-react";
+import { openExternalNavigation } from "@/lib/externalNav";
 import type { Tables } from "@/integrations/supabase/types";
 import "leaflet/dist/leaflet.css";
 
@@ -164,6 +165,22 @@ const DriverRideNavigation = ({ ride, onAdvance, onComplete, onCancel }: Props) 
 
       {/* Bottom panel */}
       <div className="border-t border-border bg-background p-4 space-y-3">
+        {/* External navigation */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => openExternalNavigation(target.lat, target.lng, "waze")}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 text-xs font-display uppercase tracking-wider text-foreground"
+          >
+            <ExternalLink size={12} /> Waze
+          </button>
+          <button
+            onClick={() => openExternalNavigation(target.lat, target.lng, "google")}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 text-xs font-display uppercase tracking-wider text-foreground"
+          >
+            <ExternalLink size={12} /> Google Maps
+          </button>
+        </div>
+
         {/* Ride info */}
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-2">

@@ -1,15 +1,16 @@
-import { Navigation, DollarSign, User } from "lucide-react";
+import { Navigation, DollarSign, User, BarChart3 } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface DriverNavProps {
-  activeTab: "home" | "earnings" | "profile";
-  onTabChange: (tab: "home" | "earnings" | "profile") => void;
+  activeTab: "home" | "earnings" | "stats" | "profile";
+  onTabChange: (tab: "home" | "earnings" | "stats" | "profile") => void;
 }
 
 const DriverNav = ({ activeTab, onTabChange }: DriverNavProps) => {
   const tabs = [
     { id: "home" as const, icon: Navigation, label: "CORRIDAS" },
     { id: "earnings" as const, icon: DollarSign, label: "GANHOS" },
+    { id: "stats" as const, icon: BarChart3, label: "MÉTRICAS" },
     { id: "profile" as const, icon: User, label: "PERFIL" },
   ];
 
