@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AnimatePresence, motion } from "framer-motion";
 import DriverHome from "@/components/driver/DriverHome";
 import DriverEarnings from "@/components/driver/DriverEarnings";
+import DriverStats from "@/components/driver/DriverStats";
 import DriverNav from "@/components/driver/DriverNav";
 import DriverRideNavigation from "@/components/driver/DriverRideNavigation";
 import ProfileScreen from "@/components/ProfileScreen";
@@ -17,7 +18,7 @@ import { useCancellationSettings, estimateCancellationFee, cancelRideRpc } from 
 const Driver = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"home" | "earnings" | "profile">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "earnings" | "stats" | "profile">("home");
   const { ride: activeRide, advanceStatus, completeRide } = useActiveRide();
   const settings = useCancellationSettings();
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -114,6 +115,11 @@ const Driver = () => {
             {activeTab === "earnings" && (
               <motion.div key="driver-earnings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <DriverEarnings />
+              </motion.div>
+            )}
+            {activeTab === "stats" && (
+              <motion.div key="driver-stats" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <DriverStats />
               </motion.div>
             )}
           </AnimatePresence>
