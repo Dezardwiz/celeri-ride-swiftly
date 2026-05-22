@@ -13,7 +13,8 @@ import { AdminMap } from "@/components/admin/AdminMap";
 import { AdminCommission } from "@/components/admin/AdminCommission";
 import { AdminCancellations } from "@/components/admin/AdminCancellations";
 import { AdminDriverVerification } from "@/components/admin/AdminDriverVerification";
-import { Shield, Users, Car, DollarSign, BarChart3, LogOut, UserCheck, Wallet, MapPin, Percent, Ban, BadgeCheck } from "lucide-react";
+import { AdminSurge } from "@/components/admin/AdminSurge";
+import { Shield, Users, Car, DollarSign, BarChart3, LogOut, UserCheck, Wallet, MapPin, Percent, Ban, BadgeCheck, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import geleriLogo from "@/assets/geleri-logo.jpeg";
 
@@ -61,7 +62,7 @@ const Admin = () => {
 
       <div className="p-4 max-w-6xl mx-auto">
         <Tabs defaultValue="drivers" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-10 bg-card overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-11 bg-card overflow-x-auto">
             <TabsTrigger value="drivers" className="flex items-center gap-1 text-xs">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Motoristas</span>
@@ -85,6 +86,10 @@ const Admin = () => {
             <TabsTrigger value="tariffs" className="flex items-center gap-1 text-xs">
               <DollarSign className="h-4 w-4" />
               <span className="hidden sm:inline">Tarifas</span>
+            </TabsTrigger>
+            <TabsTrigger value="surge" className="flex items-center gap-1 text-xs">
+              <TrendingUp className="h-4 w-4" />
+              <span className="hidden sm:inline">Dinâmica</span>
             </TabsTrigger>
             <TabsTrigger value="finance" className="flex items-center gap-1 text-xs">
               <Wallet className="h-4 w-4" />
@@ -110,6 +115,7 @@ const Admin = () => {
           <TabsContent value="rides"><AdminRides /></TabsContent>
           <TabsContent value="map"><AdminMap /></TabsContent>
           <TabsContent value="tariffs"><AdminTariffs /></TabsContent>
+          <TabsContent value="surge"><AdminSurge /></TabsContent>
           <TabsContent value="finance"><AdminFinance /></TabsContent>
           <TabsContent value="commission"><AdminCommission /></TabsContent>
           <TabsContent value="cancellations"><AdminCancellations /></TabsContent>
