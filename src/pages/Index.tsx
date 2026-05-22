@@ -212,6 +212,8 @@ const Index = () => {
             loading={ride.loading}
             onConfirm={handleConfirmRide}
             onCancel={handleReset}
+            surgeMultiplier={surge.multiplier}
+            surgeLabel={surge.label}
           />
         )}
         {screen === "searching" && <SearchingDriver key="searching" onFound={handleDriverFound} />}
