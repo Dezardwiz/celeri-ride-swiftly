@@ -561,6 +561,42 @@ export type Database = {
         }
         Relationships: []
       }
+      surge_rules: {
+        Row: {
+          created_at: string
+          day_of_week: number | null
+          hour_end: number
+          hour_start: number
+          id: string
+          is_active: boolean
+          label: string
+          multiplier: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week?: number | null
+          hour_end?: number
+          hour_start?: number
+          id?: string
+          is_active?: boolean
+          label: string
+          multiplier?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number | null
+          hour_end?: number
+          hour_start?: number
+          id?: string
+          is_active?: boolean
+          label?: string
+          multiplier?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tariffs: {
         Row: {
           base_fare: number
@@ -687,6 +723,7 @@ export type Database = {
         Args: { _canceled_by: string; _reason: string; _ride_id: string }
         Returns: Json
       }
+      get_active_surge: { Args: never; Returns: Json }
       get_shared_ride: { Args: { _ride_id: string }; Returns: Json }
       has_role: {
         Args: {
