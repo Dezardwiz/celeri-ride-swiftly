@@ -119,8 +119,8 @@
 /* Map grid pattern */
 .map-grid {
   background-image:
-    linear-gradient(hsl(220 14% 20% / 0.3) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(220 14% 20% / 0.3) 1px, transparent 1px);
+    linear-gradient(hsl(45 40% 18% / 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(45 40% 18% / 0.3) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
