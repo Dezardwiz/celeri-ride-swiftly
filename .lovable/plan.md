@@ -1,3 +1,9 @@
+
+## Entrega 5: Tarifa dinâmica por demanda
+- Nova tabela `surge_rules` (regras por dia/hora com multiplicador).
+- RPC `get_active_surge()` retorna multiplicador combinando regra horária ativa + boost automático por demanda (corridas REQUESTED nos últimos 5 min vs motoristas disponíveis).
+- `calculatePrice` aceita multiplicador; UI mostra badge "Tarifa dinâmica xN".
+- Tela admin em `/admin` para CRUD das regras.
 ## Roadmap Celeri — próximas evoluções
 
 Com base nas suas escolhas, organizei o avanço em **6 entregas** focadas em experiência do passageiro, do mototaxista, regras operacionais e preparação para lançamento.
