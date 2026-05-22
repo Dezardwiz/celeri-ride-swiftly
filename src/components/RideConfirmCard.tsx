@@ -1,4 +1,4 @@
-import { Clock, MapPin, Bike, Loader2 } from "lucide-react";
+import { Clock, MapPin, Bike, Loader2, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface RideConfirmCardProps {
@@ -9,6 +9,8 @@ interface RideConfirmCardProps {
   loading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  surgeMultiplier?: number;
+  surgeLabel?: string | null;
 }
 
 const RideConfirmCard = ({
@@ -19,10 +21,13 @@ const RideConfirmCard = ({
   loading,
   onConfirm,
   onCancel,
+  surgeMultiplier = 1,
+  surgeLabel,
 }: RideConfirmCardProps) => {
   const priceStr = `R$ ${estimatedPrice.toFixed(2).replace(".", ",")}`;
   const timeStr = `${estimatedTime} min`;
   const distStr = `${estimatedDistance.toFixed(1)} km`;
+  const hasSurge = surgeMultiplier > 1.01;
 
   return (
     <motion.div
@@ -56,6 +61,16 @@ const RideConfirmCard = ({
           <span className="text-sm text-muted-foreground">Valor estimado</span>
           <span className="font-display text-xl tracking-tight text-foreground">{priceStr}</span>
         </div>
+
+        {hasSurge && (
+          <div className="flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-3 py-2">
+            <TrendingUp size={14} className="text-primary" />
+            <span className="text-xs text-foreground">
+              Tarifa dinâmica <strong>{surgeMultiplier.toFixed(2)}x</strong>
+              {surgeLabel ? ` · ${surgeLabel}` : ""}
+            </span>
+          </div>
+        )}
 
         <div className="flex gap-3">
           <button
