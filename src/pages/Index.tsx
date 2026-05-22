@@ -11,7 +11,7 @@ import RideComplete from "@/components/RideComplete";
 import HistoryScreen from "@/components/HistoryScreen";
 import ProfileScreen from "@/components/ProfileScreen";
 import WalletScreen from "@/components/WalletScreen";
-import { useRide, useActiveTariff, calculatePrice } from "@/hooks/useRide";
+import { useRide, useActiveTariff, useActiveSurge, calculatePrice } from "@/hooks/useRide";
 import { MONTES_CLAROS } from "@/lib/geo";
 import { toast } from "sonner";
 import geleriLogo from "@/assets/geleri-logo.jpeg";
@@ -52,6 +52,7 @@ const Index = () => {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const tariff = useActiveTariff();
+  const surge = useActiveSurge();
   const ride = useRide();
   const settings = useCancellationSettings();
   const savedPlaces = useSavedPlaces();
@@ -63,7 +64,7 @@ const Index = () => {
   // Estimated values
   const distanceKm = userLocation && dropoffCoords ? haversine(userLocation, dropoffCoords) * 1.3 : 0; // 1.3 road factor
   const durationMin = Math.max(Math.round((distanceKm / 30) * 60), 1); // ~30km/h avg
-  const price = calculatePrice(tariff, distanceKm, durationMin);
+  const price = calculatePrice(tariff, distanceKm, durationMin, surge.multiplier);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -211,6 +212,8 @@ const Index = () => {
             loading={ride.loading}
             onConfirm={handleConfirmRide}
             onCancel={handleReset}
+            surgeMultiplier={surge.multiplier}
+            surgeLabel={surge.label}
           />
         )}
         {screen === "searching" && <SearchingDriver key="searching" onFound={handleDriverFound} />}

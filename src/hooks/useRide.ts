@@ -30,15 +30,48 @@ export function useActiveTariff() {
   return tariff;
 }
 
+export interface SurgeInfo {
+  multiplier: number;
+  label: string | null;
+  pending: number;
+  available: number;
+}
+
+export function useActiveSurge() {
+  const [surge, setSurge] = useState<SurgeInfo>({ multiplier: 1, label: null, pending: 0, available: 0 });
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchSurge = async () => {
+      const { data } = await supabase.rpc("get_active_surge");
+      if (cancelled || !data) return;
+      const d = data as any;
+      setSurge({
+        multiplier: Number(d.multiplier) || 1,
+        label: d.label ?? null,
+        pending: Number(d.pending) || 0,
+        available: Number(d.available) || 0,
+      });
+    };
+    fetchSurge();
+    const i = setInterval(fetchSurge, 60_000);
+    return () => { cancelled = true; clearInterval(i); };
+  }, []);
+
+  return surge;
+}
+
 export function calculatePrice(
   tariff: Tariff | null,
   distanceKm: number,
-  durationMin: number
+  durationMin: number,
+  multiplier: number = 1
 ): number {
   if (!tariff) return 0;
   const computed =
     tariff.base_fare + tariff.per_km * distanceKm + tariff.per_minute * durationMin;
-  return Math.max(computed, tariff.minimum_fare);
+  const base = Math.max(computed, tariff.minimum_fare);
+  return base * (multiplier > 0 ? multiplier : 1);
 }
 
 export function useRide() {
