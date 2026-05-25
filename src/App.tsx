@@ -14,6 +14,8 @@ import DriverOnboarding from "./pages/DriverOnboarding.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Admin from "./pages/Admin.tsx";
 import SharedRide from "./pages/SharedRide.tsx";
+import Terms from "./pages/Terms.tsx";
+import Privacy from "./pages/Privacy.tsx";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +82,10 @@ const AppContent = () => {
 
           {/* Public share route (no auth required) */}
           <Route path="/share/:rideId" element={<SharedRide />} />
+
+          {/* Legal pages (public) */}
+          <Route path="/termos" element={<Terms />} />
+          <Route path="/privacidade" element={<Privacy />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
