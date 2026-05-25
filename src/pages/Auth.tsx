@@ -118,6 +118,12 @@ const Auth = () => {
                 Entrar como mototaxista
               </button>
             </p>
+            <p className="pt-2 text-center text-[11px] text-muted-foreground">
+              Ao continuar, você concorda com nossos{" "}
+              <a href="/termos" className="text-primary hover:underline">Termos</a>{" "}
+              e{" "}
+              <a href="/privacidade" className="text-primary hover:underline">Política de Privacidade</a>.
+            </p>
           </motion.div>
         }
 
