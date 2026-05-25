@@ -118,9 +118,6 @@ const Auth = () => {
                 Entrar como mototaxista
               </button>
             </p>
-            <p className="pt-1 text-center text-xs text-muted-foreground">
-              desenvolvido por <span className="font-medium text-foreground">payn</span>
-            </p>
           </motion.div>
         }
 
