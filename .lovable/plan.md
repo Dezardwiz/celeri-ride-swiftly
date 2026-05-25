@@ -1,95 +1,119 @@
 
-## Entrega 5: Tarifa dinâmica por demanda
-- Nova tabela `surge_rules` (regras por dia/hora com multiplicador).
-- RPC `get_active_surge()` retorna multiplicador combinando regra horária ativa + boost automático por demanda (corridas REQUESTED nos últimos 5 min vs motoristas disponíveis).
-- `calculatePrice` aceita multiplicador; UI mostra badge "Tarifa dinâmica xN".
-- Tela admin em `/admin` para CRUD das regras.
-## Roadmap Celeri — próximas evoluções
+# O que falta para o Celeri rodar 100% em produção
 
-Com base nas suas escolhas, organizei o avanço em **6 entregas** focadas em experiência do passageiro, do mototaxista, regras operacionais e preparação para lançamento.
+Hoje o app já tem o núcleo funcional: autenticação, mapa, corrida, motorista, carteira interna, comissão, cancelamento com taxa, tarifa dinâmica, onboarding com documentos, painel admin e páginas legais.
+
+Para virar um produto real (com dinheiro entrando de verdade e pronto para as lojas), faltam os blocos abaixo, organizados por prioridade.
 
 ---
 
-### 1. Experiência do passageiro
-- **Autocomplete de endereços melhorado**: já usamos Nominatim — vamos adicionar histórico de buscas, locais favoritos (Casa, Trabalho) e ícones por categoria.
-- **ETA em tempo real**: mostrar tempo estimado de chegada do mototaxista ao ponto de embarque, atualizado conforme ele se move (usa a localização ao vivo já existente).
-- **Compartilhar viagem**: botão "Compartilhar trajeto" gera link público temporário com mapa ao vivo da corrida para um contato de confiança.
-- **Tela de acompanhamento aprimorada**: foto, nome, placa, modelo da moto e avaliação do mototaxista visíveis durante toda a corrida.
+## 1. Monetização real — entrada e saída de dinheiro (CRÍTICO)
 
-### 2. Experiência do mototaxista
-- **Navegação externa integrada**: botão "Iniciar navegação" abre Google Maps/Waze com o destino preenchido (deep link nativo via Capacitor).
-- **Métricas pessoais**: tela de desempenho com taxa de aceitação, taxa de cancelamento, corridas/hora e ganho médio.
-- **Modo descanso**: pausar recebimento de novas corridas por 15/30/60 min sem ficar offline (mantém aparição no mapa do admin).
-- **Resumo da corrida antes de aceitar**: distância até o passageiro + distância da corrida + ganho líquido (já descontada a comissão).
+Hoje a "carteira" só soma saldo fictício (`addCredits` faz INSERT direto, sem cobrança real). Para receber de verdade:
 
-### 3. Cancelamento com regras e taxas
-- Janela gratuita de **2 minutos** após aceitar.
-- Após o estado **ARRIVED** (motorista no local), cancelamento do passageiro gera taxa configurável (ex.: R$ 5,00) debitada da carteira ou cobrada na próxima corrida.
-- Motoristas com taxa de cancelamento alta entram em alerta no painel admin.
-- Motivos pré-definidos (passageiro não apareceu, endereço errado, problema com a moto, outro).
-- Registro completo de cancelamentos para auditoria.
+### 1a. Recarga / pagamento do passageiro (entrada)
+Três opções, da mais simples à mais completa:
 
-### 4. Tarifa dinâmica por demanda
-- Cálculo automático de multiplicador (1.0x → 2.5x) baseado em:
-  - razão `corridas em REQUESTED / motoristas disponíveis` por região.
-  - faixas de horário configuráveis (rush, madrugada).
-- Multiplicador exibido com transparência ao passageiro **antes** de confirmar ("Tarifa 1.4× — alta demanda").
-- Configuração no painel admin: faixas, multiplicador máximo, ativação por região.
+- **PIX via Mercado Pago / Asaas / PagSeguro** (recomendado para Brasil)
+  - Edge function `create-pix-charge` gera QR Code e copia-e-cola.
+  - Webhook `pix-webhook` recebe confirmação e credita a `wallets` automaticamente.
+  - Mais barato (≈ R$ 0,99/transação) e instantâneo.
+- **Cartão de crédito** via mesmo gateway (taxa ≈ 3,99% + R$ 0,39).
+- **Stripe** (mais simples de plugar via Lovable Payments, mas não tem PIX nativo no Brasil).
 
-### 5. Onboarding e verificação de motoristas
-Fluxo completo após o cadastro inicial em `/driver/auth`:
-1. Upload de **CNH** (frente/verso).
-2. Upload de **CRLV** da moto.
-3. Upload de **selfie segurando documento**.
-4. Foto da moto (frontal e placa).
-5. Aceite dos termos do mototaxista.
-6. Status "Em análise" até aprovação no painel admin (já existente, será expandido com visualização dos documentos e botões aprovar/recusar com motivo).
-- Documentos armazenados em bucket privado, acessíveis somente ao admin.
+Recomendação: **Mercado Pago** (PIX + cartão + saldo MP, ideal para o público de Montes Claros).
 
-### 6. Páginas legais e políticas (pré-lançamento)
-Páginas públicas necessárias para Apple App Store e Google Play:
-- **Termos de Uso** (passageiro e mototaxista — versões separadas).
-- **Política de Privacidade** (compatível com LGPD: dados coletados, finalidade, retenção, direitos do titular, contato do DPO).
-- **Política de Cancelamento e Reembolso**.
-- **Código de Conduta** (passageiro e mototaxista).
-- Aceite obrigatório registrado no banco no primeiro login após publicação (`accepted_terms_at`, `accepted_terms_version`).
-- Links no rodapé do app, na tela de cadastro e no perfil.
+### 1b. Repasse para o mototaxista (saída)
+- Tabela `driver_payouts` já existe mas só registra "pending".
+- Falta: tela do motorista "Sacar saldo" → pede chave PIX → cria transferência via API do gateway → marca como `paid`.
+- Edge function `process-payout` + webhook de confirmação.
+- Regras: saldo mínimo (ex.: R$ 20), limite diário, retenção de comissão.
+
+### 1c. Cobrança automática da taxa de cancelamento
+Hoje a taxa é registrada mas não é cobrada. Opções:
+- Debitar do saldo da carteira se houver.
+- Bloquear novas corridas até quitar a dívida pendente.
+
+### 1d. Recibo / nota
+- Edge function que gera PDF ou HTML do recibo da corrida (já dá para enviar por e-mail).
 
 ---
 
-### Detalhes técnicos
+## 2. Confiabilidade operacional
 
-**Banco de dados (novas tabelas/colunas)**
-- `saved_places` (passageiro): label, endereço, lat/lng.
-- `search_history` (passageiro): últimos endereços buscados.
-- `cancellations`: ride_id, canceled_by, reason, fee_amount, occurred_at.
-- `surge_zones` + `surge_rules`: regiões e regras de multiplicador.
-- `driver_documents`: tipo, url, status (pending/approved/rejected), reviewed_by.
-- `legal_documents` + `user_consents`: versões e aceites.
-- Adições em `drivers`: rating médio, taxa de cancelamento (calculadas).
-- Adições em `rides`: surge_multiplier, cancellation_fee.
-
-**Storage**
-- Novo bucket privado `driver-documents` com RLS (motorista vê os próprios; admin vê todos).
-
-**Edge functions**
-- `calculate-surge`: roda periodicamente atualizando multiplicadores por zona.
-- `process-cancellation`: aplica taxa, atualiza estatísticas, libera motorista.
-
-**Frontend**
-- Novas telas: `/driver/onboarding`, `/driver/stats`, `/share/:rideId`, `/legal/*`.
-- Componentes: `DriverInfoCard`, `SurgeBadge`, `CancellationDialog`, `DocumentUpload`, `SavedPlacesList`.
-- Deep links nativos via `@capacitor/app` para Waze/Google Maps.
+- **Matching automático de motoristas**: hoje a corrida fica `REQUESTED` esperando aceite manual. Falta um algoritmo que ofereça em sequência ao motorista mais próximo (10-15s cada) com timeout.
+- **Geolocalização em background do motorista**: usar `@capacitor/geolocation` + foreground service Android para atualizar `drivers.location_lat/lng` mesmo com o app em segundo plano.
+- **Chat passageiro ↔ motorista** durante a corrida (mensagens rápidas pré-definidas para não tirar a atenção).
+- **SOS / botão de pânico** com envio de localização para contato de emergência + admin.
+- **Reconexão e retry** de chamadas falhas (perda de rede no meio da corrida).
 
 ---
 
-### Ordem sugerida de implementação
+## 3. Compliance e segurança (obrigatório para as lojas)
 
-1. **Cancelamento com regras e taxas** (curto, destrava confiança).
-2. **Onboarding e verificação de motoristas** (essencial para qualidade da frota).
-3. **Experiência do passageiro** (favoritos, ETA, info do mototaxista).
-4. **Experiência do mototaxista** (navegação externa, métricas, modo descanso).
-5. **Tarifa dinâmica** (precisa de volume mínimo para calibrar).
-6. **Páginas legais** (último passo antes de empacotar para as lojas).
+- **Validação real de CNH e CRLV**: hoje o admin aprova visualmente. Integrar com serviço tipo **Idwall, Unico Check ou SERPRO** para validar documento + biometria facial.
+- **LGPD operacional**:
+  - Tela "Meus dados" com exportação (já há a política, falta a função).
+  - Tela "Excluir minha conta" (exigência Apple desde 2022).
+- **Background check** do motorista (antecedentes criminais) — pode ser manual via planilha no MVP.
+- **Termos versionados com aceite registrado** (campo `accepted_terms_version` na profile).
 
-Posso começar pela entrega 1 ou você prefere outra ordem?
+---
+
+## 4. Notificações e engajamento
+
+- **Push notifications** já tem infraestrutura (VAPID configurado), falta:
+  - Cobrir todos os eventos: corrida aceita, motorista chegou, corrida finalizada, promoção.
+  - Notificação de "nova corrida" para motorista com som diferenciado.
+- **E-mails transacionais**: recibo, confirmação de cadastro, recuperação de senha personalizada.
+- **Programa de indicação**: código do passageiro/motorista → bônus na carteira.
+- **Cupons promocionais** (ex.: primeiro mês com 20% off).
+
+---
+
+## 5. Empacotamento e publicação nas lojas
+
+- **Configuração final do Capacitor**: ícones em todas as resoluções, splash screens, permissões certas (geolocalização "sempre", notificações, câmera).
+- **Build Android (AAB)** para Google Play + conta de desenvolvedor (US$ 25 único).
+- **Build iOS (IPA)** para App Store + conta Apple Developer (US$ 99/ano) + Mac para assinar (ou usar serviço como Codemagic).
+- **Screenshots, descrição, vídeo de apresentação** para as fichas das lojas.
+- **Política de privacidade pública** já temos — só precisa estar acessível por URL fixa.
+
+---
+
+## 6. Monitoramento e operação
+
+- **Sentry ou LogRocket** para capturar erros em produção.
+- **Dashboard de saúde** no admin: corridas/hora, tempo médio de aceite, motoristas online agora, receita do dia.
+- **Backup automático** do banco (Supabase já faz, mas vale checar a retenção).
+- **Atendimento ao cliente**: WhatsApp Business ou chat integrado (Crisp/Tawk.to).
+
+---
+
+## 7. Pequenos polimentos pendentes no app atual
+
+- Botão "Esqueci minha senha" no /auth.
+- Edição de perfil (nome, foto, telefone).
+- Histórico de corridas com filtros e recibo individual.
+- Avaliação obrigatória após corrida (hoje é opcional).
+- Modo escuro/claro (atualmente só escuro — talvez seja decisão de design manter).
+
+---
+
+## Sugestão de ordem de execução
+
+1. **Pagamento real (PIX + cartão via Mercado Pago)** — sem isso, o app não gera receita.
+2. **Saque do motorista** — sem isso, ninguém quer dirigir.
+3. **Matching automático + geolocalização em background** — qualidade do serviço.
+4. **Validação de documentos + exclusão de conta (LGPD)** — exigências legais e da Apple.
+5. **Polimentos de UX (esqueci senha, edição de perfil, etc.)**.
+6. **Empacotamento e publicação nas lojas**.
+7. **Monitoramento e suporte**.
+
+---
+
+## Próximo passo recomendado
+
+Começar pelo **bloco 1 (pagamento real com Mercado Pago via PIX)**, porque destrava a operação inteira: passageiro recarrega → motorista recebe → comissão entra para o admin.
+
+Quer que eu detalhe a implementação do Mercado Pago (entrada + saída) como próxima entrega?
