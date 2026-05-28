@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Mail, Phone, ArrowLeft, Loader2 } from "lucide-react";
 import geleriLogo from "@/assets/geleri-logo.jpeg";
 
-type AuthMode = "choice" | "email-login" | "email-signup" | "phone-login" | "otp-verify";
+type AuthMode = "choice" | "email-login" | "email-signup" | "phone-login" | "otp-verify" | "forgot-password";
 
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("choice");
@@ -24,6 +24,20 @@ const Auth = () => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) toast.error(error.message);else
     toast.success("Login realizado!");
+    setLoading(false);
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Email de recuperação enviado!");
+      setMode("email-login");
+    }
     setLoading(false);
   };
 
