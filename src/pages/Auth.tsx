@@ -174,6 +174,12 @@ const Auth = () => {
             <Button type="submit" className="w-full h-12" disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
             </Button>
+            <button
+              type="button"
+              onClick={() => setMode("forgot-password")}
+              className="w-full text-center text-xs text-muted-foreground hover:text-primary transition-colors">
+              Esqueci minha senha
+            </button>
             <p className="text-center text-sm text-muted-foreground">
               Não tem conta?{" "}
               <button
