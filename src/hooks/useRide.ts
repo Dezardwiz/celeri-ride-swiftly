@@ -131,7 +131,8 @@ export function useRide() {
     if (data) {
       setCurrentRide(data);
       // Kick off sequential matching: offer to the nearest available driver
-      supabase.rpc("offer_ride_to_next_driver", { _ride_id: data.id }).catch(console.error);
+      supabase.rpc("offer_ride_to_next_driver", { _ride_id: data.id })
+        .then(({ error }) => { if (error) console.error(error); });
       // Trigger push notifications to nearby drivers
       supabase.functions.invoke("send-push", {
         body: {
