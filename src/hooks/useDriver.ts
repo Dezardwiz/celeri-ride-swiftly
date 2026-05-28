@@ -105,6 +105,7 @@ export function useDriverLocation() {
 }
 
 export function useIncomingRides(driverLocation?: { lat: number; lng: number }) {
+  const { driver } = useDriver();
   const [rides, setRides] = useState<Ride[]>([]);
 
   const filterByProximity = useCallback(
@@ -120,27 +121,33 @@ export function useIncomingRides(driverLocation?: { lat: number; lng: number }) 
   );
 
   const fetchRides = useCallback(async () => {
+    if (!driver?.id) { setRides([]); return; }
     const { data } = await supabase
       .from("rides")
       .select("*")
       .eq("status", "REQUESTED")
+      .eq("matching_driver_id", driver.id)
+      .gt("matching_expires_at", new Date().toISOString())
       .order("created_at", { ascending: false })
       .limit(20);
     if (data) setRides(filterByProximity(data));
-  }, [filterByProximity]);
+  }, [filterByProximity, driver?.id]);
 
   useEffect(() => {
+    if (!driver?.id) return;
     fetchRides();
     const channel = supabase
       .channel("incoming-rides")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "rides", filter: "status=eq.REQUESTED" },
+        { event: "*", schema: "public", table: "rides" },
         () => fetchRides()
       )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [fetchRides]);
+    // Re-check expiry every 2s so expired offers disappear from the UI
+    const tick = setInterval(fetchRides, 2000);
+    return () => { supabase.removeChannel(channel); clearInterval(tick); };
+  }, [fetchRides, driver?.id]);
 
   return rides;
 }

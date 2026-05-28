@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Power, MapPin, Navigation, Clock, DollarSign, Loader2, BellRing, Coffee, Percent } from "lucide-react";
+import { Power, MapPin, Navigation, Clock, DollarSign, Loader2, BellRing, Coffee, Percent, X } from "lucide-react";
 import { useDriver, useIncomingRides, useDriverLocation } from "@/hooks/useDriver";
 import { useCommissionPct } from "@/hooks/useCommissionPct";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -11,6 +11,33 @@ import RestModeDialog from "@/components/driver/RestModeDialog";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Ride = Tables<"rides">;
+
+function OfferCountdown({ expiresAt }: { expiresAt: string | null | undefined }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const i = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(i);
+  }, []);
+  if (!expiresAt) return null;
+  const remainingMs = new Date(expiresAt).getTime() - now;
+  const secs = Math.max(0, Math.ceil(remainingMs / 1000));
+  const total = 15;
+  const pct = Math.max(0, Math.min(100, (secs / total) * 100));
+  return (
+    <div className="mt-3">
+      <div className="mb-1 flex items-center justify-between text-[11px] font-display uppercase tracking-wider text-muted-foreground">
+        <span>Tempo para aceitar</span>
+        <span className={secs <= 5 ? "text-destructive" : "text-primary"}>{secs}s</span>
+      </div>
+      <div className="h-1 w-full overflow-hidden rounded-full bg-muted/30">
+        <div
+          className={`h-full transition-all ${secs <= 5 ? "bg-destructive" : "bg-primary"}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
 
 function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
   const R = 6371;
@@ -81,19 +108,25 @@ const DriverHome = () => {
   const acceptRide = async (ride: Ride) => {
     if (!driver) return;
     setAcceptingId(ride.id);
-    const { error } = await supabase
-      .from("rides")
-      .update({ status: "ACCEPTED", driver_id: driver.id })
-      .eq("id", ride.id)
-      .eq("status", "REQUESTED");
-
-    if (error) {
-      toast.error("Corrida já aceita por outro mototaxista");
+    const { data, error } = await supabase.rpc("accept_offered_ride", { _ride_id: ride.id });
+    const res = data as any;
+    if (error || !res?.ok) {
+      const reason = res?.reason;
+      toast.error(
+        reason === "offer_expired" ? "A oferta expirou" :
+        reason === "not_offered_to_you" ? "Esta corrida já foi oferecida a outro mototaxista" :
+        reason === "not_available" ? "Corrida não está mais disponível" :
+        "Não foi possível aceitar a corrida"
+      );
     } else {
-      await updateStatus("on_ride");
       toast.success("Corrida aceita! Vá até o passageiro.");
     }
     setAcceptingId(null);
+  };
+
+  const declineRide = async (ride: Ride) => {
+    await supabase.rpc("decline_offered_ride", { _ride_id: ride.id });
+    toast("Corrida recusada");
   };
 
   if (driverLoading) {
@@ -247,18 +280,29 @@ const DriverHome = () => {
                   </span>
                 </div>
 
-                <motion.button
-                  onClick={() => acceptRide(ride)}
-                  disabled={acceptingId === ride.id}
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 font-display text-sm uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-                  whileTap={{ scale: 0.97 }}
-                >
-                  {acceptingId === ride.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    "Aceitar corrida"
-                  )}
-                </motion.button>
+                <OfferCountdown expiresAt={(ride as any).matching_expires_at} />
+                <div className="mt-3 flex gap-2">
+                  <motion.button
+                    onClick={() => declineRide(ride)}
+                    disabled={acceptingId === ride.id}
+                    className="flex w-1/3 items-center justify-center gap-2 rounded-lg border border-border bg-card py-3 font-display text-sm uppercase tracking-wider text-muted-foreground transition-colors hover:bg-muted/40 disabled:opacity-50"
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    <X className="h-4 w-4" /> Recusar
+                  </motion.button>
+                  <motion.button
+                    onClick={() => acceptRide(ride)}
+                    disabled={acceptingId === ride.id}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-3 font-display text-sm uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    {acceptingId === ride.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Aceitar corrida"
+                    )}
+                  </motion.button>
+                </div>
               </motion.div>
             );})}
         </AnimatePresence>
