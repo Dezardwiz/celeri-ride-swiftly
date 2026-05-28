@@ -1,4 +1,4 @@
-import { ArrowLeft, Phone, Mail, LogOut, Pencil, Loader2 } from "lucide-react";
+import { ArrowLeft, Phone, Mail, LogOut, Pencil, Loader2, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
