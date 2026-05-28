@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Power, MapPin, Navigation, Clock, DollarSign, Loader2, BellRing, Coffee, Percent } from "lucide-react";
+import { Power, MapPin, Navigation, Clock, DollarSign, Loader2, BellRing, Coffee, Percent, X } from "lucide-react";
 import { useDriver, useIncomingRides, useDriverLocation } from "@/hooks/useDriver";
 import { useCommissionPct } from "@/hooks/useCommissionPct";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -81,19 +81,25 @@ const DriverHome = () => {
   const acceptRide = async (ride: Ride) => {
     if (!driver) return;
     setAcceptingId(ride.id);
-    const { error } = await supabase
-      .from("rides")
-      .update({ status: "ACCEPTED", driver_id: driver.id })
-      .eq("id", ride.id)
-      .eq("status", "REQUESTED");
-
-    if (error) {
-      toast.error("Corrida já aceita por outro mototaxista");
+    const { data, error } = await supabase.rpc("accept_offered_ride", { _ride_id: ride.id });
+    const res = data as any;
+    if (error || !res?.ok) {
+      const reason = res?.reason;
+      toast.error(
+        reason === "offer_expired" ? "A oferta expirou" :
+        reason === "not_offered_to_you" ? "Esta corrida já foi oferecida a outro mototaxista" :
+        reason === "not_available" ? "Corrida não está mais disponível" :
+        "Não foi possível aceitar a corrida"
+      );
     } else {
-      await updateStatus("on_ride");
       toast.success("Corrida aceita! Vá até o passageiro.");
     }
     setAcceptingId(null);
+  };
+
+  const declineRide = async (ride: Ride) => {
+    await supabase.rpc("decline_offered_ride", { _ride_id: ride.id });
+    toast("Corrida recusada");
   };
 
   if (driverLoading) {

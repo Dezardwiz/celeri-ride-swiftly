@@ -130,6 +130,8 @@ export function useRide() {
     setLoading(false);
     if (data) {
       setCurrentRide(data);
+      // Kick off sequential matching: offer to the nearest available driver
+      supabase.rpc("offer_ride_to_next_driver", { _ride_id: data.id }).catch(console.error);
       // Trigger push notifications to nearby drivers
       supabase.functions.invoke("send-push", {
         body: {
@@ -144,6 +146,28 @@ export function useRide() {
     }
     return data;
   };
+
+  // While the ride is REQUESTED, watch the offer window and re-offer when it expires.
+  useEffect(() => {
+    if (!currentRide?.id || currentRide.status !== "REQUESTED") return;
+    let cancelled = false;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 20; // ~5 min of cycling through drivers
+
+    const tick = async () => {
+      if (cancelled) return;
+      const expiresAt = (currentRide as any).matching_expires_at as string | null;
+      const needsReoffer =
+        !expiresAt || new Date(expiresAt).getTime() <= Date.now();
+      if (needsReoffer && attempts < MAX_ATTEMPTS) {
+        attempts++;
+        await supabase.rpc("offer_ride_to_next_driver", { _ride_id: currentRide.id });
+      }
+    };
+    tick();
+    const i = setInterval(tick, 3000);
+    return () => { cancelled = true; clearInterval(i); };
+  }, [currentRide?.id, currentRide?.status, (currentRide as any)?.matching_expires_at]);
 
   const completeRide = async (finalPrice: number) => {
     if (!currentRide) return;
