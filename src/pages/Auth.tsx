@@ -304,6 +304,34 @@ const Auth = () => {
             </Button>
           </motion.form>
         }
+
+        {mode === "forgot-password" &&
+        <motion.form
+          key="forgot-password"
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -40 }}
+          onSubmit={handleForgotPassword}
+          className="w-full max-w-sm space-y-4">
+            <button type="button" onClick={() => setMode("email-login")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft className="h-4 w-4" /> Voltar
+            </button>
+            <h2 className="font-display text-xl font-semibold text-foreground">Recuperar Senha</h2>
+            <p className="text-sm text-muted-foreground">
+              Informe seu email para receber o link de redefinição.
+            </p>
+            <Input
+              type="email"
+              placeholder="seu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="h-12" />
+            <Button type="submit" className="w-full h-12" disabled={loading}>
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar Link"}
+            </Button>
+          </motion.form>
+        }
       </AnimatePresence>
     </div>);
 
