@@ -1,6 +1,6 @@
 import { ArrowLeft, Star, MapPin, ChevronRight, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -22,6 +22,8 @@ const HistoryScreen = ({ onBack }: HistoryScreenProps) => {
   const { user } = useAuth();
   const [rides, setRides] = useState<RideWithRating[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<"all" | "COMPLETED" | "CANCELED">("all");
+  const [periodFilter, setPeriodFilter] = useState<"all" | "7d" | "30d">("all");
 
   useEffect(() => {
     if (!user) return;
@@ -71,6 +73,27 @@ const HistoryScreen = ({ onBack }: HistoryScreenProps) => {
     IN_PROGRESS: "Em andamento",
   };
 
+  const filteredRides = useMemo(() => {
+    const now = Date.now();
+    const cutoff = periodFilter === "7d" ? now - 7 * 86400000 : periodFilter === "30d" ? now - 30 * 86400000 : 0;
+    return rides.filter((r) => {
+      if (statusFilter !== "all" && r.status !== statusFilter) return false;
+      if (cutoff && new Date(r.created_at).getTime() < cutoff) return false;
+      return true;
+    });
+  }, [rides, statusFilter, periodFilter]);
+
+  const statusChips: Array<{ id: typeof statusFilter; label: string }> = [
+    { id: "all", label: "Todas" },
+    { id: "COMPLETED", label: "Concluídas" },
+    { id: "CANCELED", label: "Canceladas" },
+  ];
+  const periodChips: Array<{ id: typeof periodFilter; label: string }> = [
+    { id: "all", label: "Sempre" },
+    { id: "7d", label: "7 dias" },
+    { id: "30d", label: "30 dias" },
+  ];
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -84,15 +107,44 @@ const HistoryScreen = ({ onBack }: HistoryScreenProps) => {
         <h2 className="font-display text-lg uppercase tracking-wider">Histórico</h2>
       </div>
 
+      <div className="border-b border-border px-4 py-3 space-y-2">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          {statusChips.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setStatusFilter(c.id)}
+              className={`flex-shrink-0 rounded-full px-3 py-1 text-xs transition-colors ${
+                statusFilter === c.id ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground"
+              }`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          {periodChips.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setPeriodFilter(c.id)}
+              className={`flex-shrink-0 rounded-full px-3 py-1 text-xs transition-colors ${
+                periodFilter === c.id ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground"
+              }`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="flex-1 overflow-y-auto no-scrollbar pb-20">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="animate-spin text-primary" size={28} />
           </div>
-        ) : rides.length === 0 ? (
+        ) : filteredRides.length === 0 ? (
           <p className="text-center text-muted-foreground py-16 text-sm">Nenhuma corrida encontrada.</p>
         ) : (
-          rides.map((ride) => (
+          filteredRides.map((ride) => (
             <div
               key={ride.id}
               className="flex w-full items-center gap-3 border-b border-border px-4 py-4 text-left"

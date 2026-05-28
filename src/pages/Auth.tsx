@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Mail, Phone, ArrowLeft, Loader2 } from "lucide-react";
 import geleriLogo from "@/assets/geleri-logo.jpeg";
 
-type AuthMode = "choice" | "email-login" | "email-signup" | "phone-login" | "otp-verify";
+type AuthMode = "choice" | "email-login" | "email-signup" | "phone-login" | "otp-verify" | "forgot-password";
 
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("choice");
@@ -24,6 +24,20 @@ const Auth = () => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) toast.error(error.message);else
     toast.success("Login realizado!");
+    setLoading(false);
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Email de recuperação enviado!");
+      setMode("email-login");
+    }
     setLoading(false);
   };
 
@@ -160,6 +174,12 @@ const Auth = () => {
             <Button type="submit" className="w-full h-12" disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
             </Button>
+            <button
+              type="button"
+              onClick={() => setMode("forgot-password")}
+              className="w-full text-center text-xs text-muted-foreground hover:text-primary transition-colors">
+              Esqueci minha senha
+            </button>
             <p className="text-center text-sm text-muted-foreground">
               Não tem conta?{" "}
               <button
@@ -281,6 +301,34 @@ const Auth = () => {
           
             <Button type="submit" className="w-full h-12" disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verificar"}
+            </Button>
+          </motion.form>
+        }
+
+        {mode === "forgot-password" &&
+        <motion.form
+          key="forgot-password"
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -40 }}
+          onSubmit={handleForgotPassword}
+          className="w-full max-w-sm space-y-4">
+            <button type="button" onClick={() => setMode("email-login")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft className="h-4 w-4" /> Voltar
+            </button>
+            <h2 className="font-display text-xl font-semibold text-foreground">Recuperar Senha</h2>
+            <p className="text-sm text-muted-foreground">
+              Informe seu email para receber o link de redefinição.
+            </p>
+            <Input
+              type="email"
+              placeholder="seu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="h-12" />
+            <Button type="submit" className="w-full h-12" disabled={loading}>
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar Link"}
             </Button>
           </motion.form>
         }

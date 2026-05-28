@@ -1,8 +1,12 @@
-import { ArrowLeft, User, Star, Phone, Mail, LogOut, ChevronRight } from "lucide-react";
+import { ArrowLeft, Phone, Mail, LogOut, Pencil, Loader2, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -11,6 +15,10 @@ interface ProfileScreenProps {
 const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<{ full_name: string | null; phone: string | null } | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -39,6 +47,29 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
     await signOut();
   };
 
+  const openEdit = () => {
+    setEditName(profile?.full_name ?? "");
+    setEditPhone(profile?.phone ?? "");
+    setEditOpen(true);
+  };
+
+  const saveProfile = async () => {
+    if (!user) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ full_name: editName.trim() || null, phone: editPhone.trim() || null })
+      .eq("user_id", user.id);
+    setSaving(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setProfile({ full_name: editName.trim() || null, phone: editPhone.trim() || null });
+    toast.success("Perfil atualizado");
+    setEditOpen(false);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -61,6 +92,12 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
             {displayName}
           </h3>
           <p className="text-sm text-muted-foreground">Passageiro</p>
+          <button
+            onClick={openEdit}
+            className="mt-3 flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-accent">
+            <Pencil size={12} />
+            Editar perfil
+          </button>
         </div>
 
         <div className="divide-y divide-border">
@@ -90,6 +127,30 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
           <p className="text-xs text-muted-foreground">desenvolvido por payn</p>
         </div>
       </div>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Editar perfil</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Nome completo</label>
+              <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Seu nome" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Telefone</label>
+              <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="+55 38 99999-9999" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)} disabled={saving}>Cancelar</Button>
+            <Button onClick={saveProfile} disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 };
