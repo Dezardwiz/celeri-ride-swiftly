@@ -421,6 +421,7 @@ export type Database = {
           cancellation_reason: string | null
           completed_at: string | null
           created_at: string
+          declined_driver_ids: string[]
           destination_address: string
           destination_lat: number | null
           destination_lng: number | null
@@ -430,6 +431,8 @@ export type Database = {
           estimated_price: number | null
           final_price: number | null
           id: string
+          matching_driver_id: string | null
+          matching_expires_at: string | null
           origin_address: string
           origin_lat: number | null
           origin_lng: number | null
@@ -446,6 +449,7 @@ export type Database = {
           cancellation_reason?: string | null
           completed_at?: string | null
           created_at?: string
+          declined_driver_ids?: string[]
           destination_address: string
           destination_lat?: number | null
           destination_lng?: number | null
@@ -455,6 +459,8 @@ export type Database = {
           estimated_price?: number | null
           final_price?: number | null
           id?: string
+          matching_driver_id?: string | null
+          matching_expires_at?: string | null
           origin_address: string
           origin_lat?: number | null
           origin_lng?: number | null
@@ -471,6 +477,7 @@ export type Database = {
           cancellation_reason?: string | null
           completed_at?: string | null
           created_at?: string
+          declined_driver_ids?: string[]
           destination_address?: string
           destination_lat?: number | null
           destination_lng?: number | null
@@ -480,6 +487,8 @@ export type Database = {
           estimated_price?: number | null
           final_price?: number | null
           id?: string
+          matching_driver_id?: string | null
+          matching_expires_at?: string | null
           origin_address?: string
           origin_lat?: number | null
           origin_lng?: number | null
@@ -492,6 +501,13 @@ export type Database = {
           {
             foreignKeyName: "rides_driver_id_fkey"
             columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rides_matching_driver_id_fkey"
+            columns: ["matching_driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"
             referencedColumns: ["id"]
@@ -718,11 +734,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_offered_ride: { Args: { _ride_id: string }; Returns: Json }
       assign_driver_role: { Args: { _user_id: string }; Returns: undefined }
       cancel_ride: {
         Args: { _canceled_by: string; _reason: string; _ride_id: string }
         Returns: Json
       }
+      decline_offered_ride: { Args: { _ride_id: string }; Returns: Json }
       get_active_surge: { Args: never; Returns: Json }
       get_shared_ride: { Args: { _ride_id: string }; Returns: Json }
       has_role: {
@@ -732,6 +750,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      offer_ride_to_next_driver: { Args: { _ride_id: string }; Returns: Json }
       process_ride_payment: {
         Args: {
           _amount: number
