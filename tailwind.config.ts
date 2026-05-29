@@ -56,6 +56,7 @@ export default {
         live: "hsl(var(--live))",
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
+        "primary-glow": "hsl(var(--primary-glow))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -71,6 +72,24 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "calc(var(--radius) + 4px)",
+        "2xl": "calc(var(--radius) + 8px)",
+      },
+      backgroundImage: {
+        "gradient-primary": "var(--gradient-primary)",
+        "gradient-surface": "var(--gradient-surface)",
+        "gradient-glow": "var(--gradient-glow)",
+        "gradient-fade": "var(--gradient-fade)",
+      },
+      boxShadow: {
+        elegant: "var(--shadow-md)",
+        elevated: "var(--shadow-lg)",
+        glow: "var(--shadow-glow)",
+        inset: "var(--shadow-inset)",
+      },
+      transitionTimingFunction: {
+        "out-expo": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "in-out-soft": "cubic-bezier(0.65, 0, 0.35, 1)",
       },
       keyframes: {
         "accordion-down": {
@@ -81,10 +100,25 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        "fade-in-up": {
+          from: { opacity: "0", transform: "translateY(8px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "scale-in": {
+          from: { opacity: "0", transform: "scale(0.96)" },
+          to: { opacity: "1", transform: "scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both",
+        "fade-in-up": "fade-in-up 420ms cubic-bezier(0.16, 1, 0.3, 1) both",
+        "scale-in": "scale-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both",
       },
     },
   },
