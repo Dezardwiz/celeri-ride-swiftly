@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { notifyNewRide } from "@/lib/notifications";
 import RestModeDialog from "@/components/driver/RestModeDialog";
+import { startBackgroundTracking, stopBackgroundTracking } from "@/lib/backgroundGeolocation";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Ride = Tables<"rides">;
@@ -96,6 +97,20 @@ const DriverHome = () => {
     }, 30000); // every 30s
     return () => clearInterval(interval);
   }, [isOnline, driverLocation.lat, driverLocation.lng, driver?.id]);
+
+  // Background geolocation: keep tracking when app is in background / screen off
+  useEffect(() => {
+    if (!isOnline || !driver) {
+      stopBackgroundTracking();
+      return;
+    }
+    startBackgroundTracking((pos) => {
+      updateLocation(pos.lat, pos.lng);
+    });
+    return () => {
+      stopBackgroundTracking();
+    };
+  }, [isOnline, driver?.id]);
 
   const toggleAvailability = async () => {
     await updateStatus(isOnline ? "unavailable" : "available");
