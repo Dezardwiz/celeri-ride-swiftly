@@ -3,8 +3,10 @@ import { motion } from "framer-motion";
 import L from "leaflet";
 import { MONTES_CLAROS } from "@/lib/geo";
 import { fetchRoute } from "@/lib/routing";
-import { Navigation, Phone, X, ChevronRight, CheckCircle2, MapPin, Loader2, ExternalLink } from "lucide-react";
+import { Navigation, X, ChevronRight, CheckCircle2, MapPin, ExternalLink, MessageCircle } from "lucide-react";
 import { openExternalNavigation } from "@/lib/externalNav";
+import RideChatSheet from "@/components/RideChatSheet";
+import { useRideChat } from "@/hooks/useRideChat";
 import type { Tables } from "@/integrations/supabase/types";
 import "leaflet/dist/leaflet.css";
 
@@ -50,6 +52,8 @@ const DriverRideNavigation = ({ ride, onAdvance, onComplete, onCancel }: Props) 
   const driverMarkerRef = useRef<L.Marker | null>(null);
   const routeRef = useRef<L.Polyline | null>(null);
   const [driverPos, setDriverPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const { unreadCount } = useRideChat(ride.id, "driver");
 
   const pickup = { lat: ride.origin_lat ?? MONTES_CLAROS.center.lat, lng: ride.origin_lng ?? MONTES_CLAROS.center.lng };
   const dropoff = { lat: ride.destination_lat ?? MONTES_CLAROS.center.lat + 0.01, lng: ride.destination_lng ?? MONTES_CLAROS.center.lng + 0.01 };
@@ -205,6 +209,19 @@ const DriverRideNavigation = ({ ride, onAdvance, onComplete, onCancel }: Props) 
             </motion.button>
           )}
           <motion.button
+            onClick={() => setChatOpen(true)}
+            className="relative flex items-center justify-center rounded-xl border border-border bg-card p-3 text-foreground"
+            whileTap={{ scale: 0.95 }}
+            aria-label="Chat com passageiro"
+          >
+            <MessageCircle size={20} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-display text-primary-foreground">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </motion.button>
+          <motion.button
             onClick={handleAction}
             className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3.5 font-display text-sm uppercase tracking-wider text-white ${statusInfo.color}`}
             whileTap={{ scale: 0.97 }}
@@ -218,6 +235,14 @@ const DriverRideNavigation = ({ ride, onAdvance, onComplete, onCancel }: Props) 
           </motion.button>
         </div>
       </div>
+
+      <RideChatSheet
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        rideId={ride.id}
+        role="driver"
+        counterpartyName="Passageiro"
+      />
     </motion.div>
   );
 };
