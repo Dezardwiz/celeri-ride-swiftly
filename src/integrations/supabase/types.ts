@@ -412,6 +412,36 @@ export type Database = {
           },
         ]
       }
+      ride_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          read_at: string | null
+          ride_id: string
+          sender_id: string
+          sender_role: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          read_at?: string | null
+          ride_id: string
+          sender_id: string
+          sender_role: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          read_at?: string | null
+          ride_id?: string
+          sender_id?: string
+          sender_role?: string
+        }
+        Relationships: []
+      }
       rides: {
         Row: {
           accepted_at: string | null

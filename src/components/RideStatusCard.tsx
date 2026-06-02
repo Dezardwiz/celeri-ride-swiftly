@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Phone, MessageCircle, Star, Navigation, X, Share2, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import type { DriverInfo } from "@/hooks/useDriverInfo";
+import RideChatSheet from "@/components/RideChatSheet";
+import { useRideChat } from "@/hooks/useRideChat";
 
 type RideStatus = "accepted" | "arriving" | "arrived" | "in_progress";
 
@@ -16,6 +19,8 @@ interface RideStatusCardProps {
 }
 
 const RideStatusCard = ({ status, onAdvance, onComplete, onCancel, driver, etaMin, rideId }: RideStatusCardProps) => {
+  const [chatOpen, setChatOpen] = useState(false);
+  const { unreadCount } = useRideChat(rideId ?? null, "passenger");
   const labels: Record<RideStatus, { label: string; color: string }> = {
     accepted: { label: "Corrida Aceita", color: "text-primary" },
     arriving: { label: "Aproximando-se", color: "text-primary" },
@@ -108,9 +113,20 @@ const RideStatusCard = ({ status, onAdvance, onComplete, onCancel, driver, etaMi
                   <Share2 size={16} />
                 </button>
               )}
-              <button className="rounded-full border border-border p-2 text-muted-foreground hover:bg-surface-hover transition-colors">
-                <MessageCircle size={16} />
-              </button>
+              {rideId && driver && (
+                <button
+                  onClick={() => setChatOpen(true)}
+                  title="Conversar com mototaxista"
+                  className="relative rounded-full border border-border p-2 text-muted-foreground hover:bg-surface-hover transition-colors"
+                >
+                  <MessageCircle size={16} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-display text-primary-foreground">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+              )}
               <button className="rounded-full border border-border p-2 text-muted-foreground hover:bg-surface-hover transition-colors">
                 <Phone size={16} />
               </button>
@@ -151,6 +167,15 @@ const RideStatusCard = ({ status, onAdvance, onComplete, onCancel, driver, etaMi
           )}
         </div>
       </div>
+      {rideId && (
+        <RideChatSheet
+          open={chatOpen}
+          onClose={() => setChatOpen(false)}
+          rideId={rideId}
+          role="passenger"
+          counterpartyName={driver?.name ?? "Mototaxista"}
+        />
+      )}
     </motion.div>
   );
 };
