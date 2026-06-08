@@ -112,6 +112,102 @@ export type Database = {
         }
         Relationships: []
       }
+      coupon_redemptions: {
+        Row: {
+          coupon_id: string
+          created_at: string
+          discount_applied: number
+          id: string
+          ride_id: string | null
+          user_id: string
+        }
+        Insert: {
+          coupon_id: string
+          created_at?: string
+          discount_applied: number
+          id?: string
+          ride_id?: string | null
+          user_id: string
+        }
+        Update: {
+          coupon_id?: string
+          created_at?: string
+          discount_applied?: number
+          id?: string
+          ride_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_redemptions_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          discount_amount: number | null
+          discount_pct: number | null
+          first_ride_only: boolean
+          id: string
+          is_active: boolean
+          max_discount: number | null
+          min_ride_price: number
+          updated_at: string
+          usage_count: number
+          usage_limit: number | null
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          discount_amount?: number | null
+          discount_pct?: number | null
+          first_ride_only?: boolean
+          id?: string
+          is_active?: boolean
+          max_discount?: number | null
+          min_ride_price?: number
+          updated_at?: string
+          usage_count?: number
+          usage_limit?: number | null
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          discount_amount?: number | null
+          discount_pct?: number | null
+          first_ride_only?: boolean
+          id?: string
+          is_active?: boolean
+          max_discount?: number | null
+          min_ride_price?: number
+          updated_at?: string
+          usage_count?: number
+          usage_limit?: number | null
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       driver_documents: {
         Row: {
           created_at: string
@@ -321,27 +417,36 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          first_ride_bonus_paid: boolean
           full_name: string | null
           id: string
           phone: string | null
+          referral_code: string | null
+          referred_by: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          first_ride_bonus_paid?: boolean
           full_name?: string | null
           id?: string
           phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          first_ride_bonus_paid?: boolean
           full_name?: string | null
           id?: string
           phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -450,11 +555,13 @@ export type Database = {
           cancellation_fee: number | null
           cancellation_reason: string | null
           completed_at: string | null
+          coupon_code: string | null
           created_at: string
           declined_driver_ids: string[]
           destination_address: string
           destination_lat: number | null
           destination_lng: number | null
+          discount_amount: number
           driver_id: string | null
           estimated_distance_km: number | null
           estimated_duration_min: number | null
@@ -478,11 +585,13 @@ export type Database = {
           cancellation_fee?: number | null
           cancellation_reason?: string | null
           completed_at?: string | null
+          coupon_code?: string | null
           created_at?: string
           declined_driver_ids?: string[]
           destination_address: string
           destination_lat?: number | null
           destination_lng?: number | null
+          discount_amount?: number
           driver_id?: string | null
           estimated_distance_km?: number | null
           estimated_duration_min?: number | null
@@ -506,11 +615,13 @@ export type Database = {
           cancellation_fee?: number | null
           cancellation_reason?: string | null
           completed_at?: string | null
+          coupon_code?: string | null
           created_at?: string
           declined_driver_ids?: string[]
           destination_address?: string
           destination_lat?: number | null
           destination_lng?: number | null
+          discount_amount?: number
           driver_id?: string | null
           estimated_distance_km?: number | null
           estimated_duration_min?: number | null
@@ -765,12 +876,14 @@ export type Database = {
     }
     Functions: {
       accept_offered_ride: { Args: { _ride_id: string }; Returns: Json }
+      apply_referral_code: { Args: { _code: string }; Returns: Json }
       assign_driver_role: { Args: { _user_id: string }; Returns: undefined }
       cancel_ride: {
         Args: { _canceled_by: string; _reason: string; _ride_id: string }
         Returns: Json
       }
       decline_offered_ride: { Args: { _ride_id: string }; Returns: Json }
+      generate_referral_code: { Args: never; Returns: string }
       get_active_surge: { Args: never; Returns: Json }
       get_shared_ride: { Args: { _ride_id: string }; Returns: Json }
       has_role: {
@@ -789,6 +902,14 @@ export type Database = {
           _ride_id: string
         }
         Returns: boolean
+      }
+      redeem_coupon: {
+        Args: { _code: string; _discount: number; _ride_id: string }
+        Returns: Json
+      }
+      validate_coupon: {
+        Args: { _code: string; _ride_price: number }
+        Returns: Json
       }
     }
     Enums: {
