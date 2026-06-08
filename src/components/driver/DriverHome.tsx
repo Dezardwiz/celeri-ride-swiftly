@@ -135,6 +135,15 @@ const DriverHome = () => {
       );
     } else {
       toast.success("Corrida aceita! Vá até o passageiro.");
+      // Notify passenger
+      supabase.functions.invoke("send-ride-event", {
+        body: {
+          user_ids: [ride.passenger_id],
+          title: "✅ Mototáxi a caminho!",
+          body: "Seu mototáxi aceitou a corrida e está indo até você.",
+          data: { ride_id: ride.id },
+        },
+      }).catch(console.error);
     }
     setAcceptingId(null);
   };

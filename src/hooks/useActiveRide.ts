@@ -8,6 +8,14 @@ type RideStatus = "ACCEPTED" | "ARRIVING" | "ARRIVED" | "IN_PROGRESS" | "COMPLET
 
 const ACTIVE_STATUSES = ["ACCEPTED", "ARRIVING", "ARRIVED", "IN_PROGRESS"] as const;
 
+async function notifyPassenger(passengerId: string, title: string, body: string, data: Record<string, unknown> = {}) {
+  try {
+    await supabase.functions.invoke("send-ride-event", {
+      body: { user_ids: [passengerId], title, body, data },
+    });
+  } catch (e) { console.error("notify passenger failed", e); }
+}
+
 export function useActiveRide() {
   const { driver, updateStatus } = useDriver();
   const [ride, setRide] = useState<Ride | null>(null);
@@ -67,6 +75,12 @@ export function useActiveRide() {
 
     await supabase.from("rides").update(updateData).eq("id", ride.id);
     setRide((r) => r ? { ...r, ...updateData, status: next } as Ride : null);
+
+    if (next === "ARRIVED") {
+      notifyPassenger(ride.passenger_id, "🏍️ Mototáxi chegou!", "Seu mototáxi está te aguardando no local.", { ride_id: ride.id });
+    } else if (next === "IN_PROGRESS") {
+      notifyPassenger(ride.passenger_id, "Corrida iniciada", "Boa viagem! 🛵", { ride_id: ride.id });
+    }
   }, [ride]);
 
   const completeRide = useCallback(async () => {
@@ -78,6 +92,7 @@ export function useActiveRide() {
       completed_at: new Date().toISOString(),
     }).eq("id", ride.id);
     await updateStatus("available");
+    notifyPassenger(ride.passenger_id, "Corrida finalizada", `Total: R$ ${finalPrice.toFixed(2)}. Avalie sua viagem!`, { ride_id: ride.id });
     setRide(null);
   }, [ride, updateStatus]);
 
