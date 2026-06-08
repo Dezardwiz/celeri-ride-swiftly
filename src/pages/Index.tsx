@@ -82,8 +82,9 @@ const Index = () => {
     savedPlaces.recordSearch(dest, coords?.lat, coords?.lng);
   }, [savedPlaces]);
 
-  const handleConfirmRide = useCallback(async () => {
+  const handleConfirmRide = useCallback(async (coupon?: { code: string; discount: number }) => {
     if (!userLocation || !dropoffCoords) return;
+    const finalPrice = Math.max(0, price - (coupon?.discount ?? 0));
     const created = await ride.createRide({
       originAddress: "Sua localização",
       originLat: userLocation.lat,
@@ -93,9 +94,16 @@ const Index = () => {
       destinationLng: dropoffCoords.lng,
       estimatedDistanceKm: parseFloat(distanceKm.toFixed(2)),
       estimatedDurationMin: durationMin,
-      estimatedPrice: parseFloat(price.toFixed(2)),
+      estimatedPrice: parseFloat(finalPrice.toFixed(2)),
     });
     if (created) {
+      if (coupon) {
+        await (await import("@/integrations/supabase/client")).supabase.rpc("redeem_coupon", {
+          _code: coupon.code,
+          _ride_id: created.id,
+          _discount: coupon.discount,
+        });
+      }
       setScreen("searching");
       toast.success("Corrida solicitada!");
     } else {
