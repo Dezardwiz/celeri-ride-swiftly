@@ -17,19 +17,25 @@ const TILE_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
 const makeIcon = (html: string, size: number) =>
   L.divIcon({ className: "", html, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
 
+const GOLD = "#F5B301";
 const pickupIcon = makeIcon(
-  `<div style="width:16px;height:16px;background:#2F6BFF;border-radius:50%;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>`,
-  16
+  `<div style="width:18px;height:18px;background:#2F6BFF;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(47,107,255,0.6), 0 0 0 8px rgba(47,107,255,0.18);"></div>`,
+  18
 );
 const dropoffIcon = makeIcon(
-  `<div style="width:16px;height:16px;background:#FFFFFF;border-radius:50%;border:2px solid #2F6BFF;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>`,
+  `<div style="width:16px;height:16px;background:${GOLD};border-radius:50%;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>`,
   16
 );
 const driverIcon = makeIcon(
-  `<div style="width:32px;height:32px;background:#0B0F14;border:2px solid #2F6BFF;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(47,107,255,0.4);">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2F6BFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+  `<div style="width:36px;height:44px;display:flex;align-items:flex-start;justify-content:center;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.4));">
+    <svg width="36" height="44" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18 0C8.06 0 0 8.06 0 18c0 12 18 26 18 26s18-14 18-26C36 8.06 27.94 0 18 0z" fill="${GOLD}"/>
+      <circle cx="18" cy="18" r="13" fill="#0a0a0a"/>
+      <path d="M12 19c0-3.31 2.69-6 6-6s6 2.69 6 6v3h-1.5v-3c0-2.49-2.01-4.5-4.5-4.5S13.5 16.51 13.5 19v3H12v-3z" fill="${GOLD}"/>
+      <path d="M11 22h14v1.5H11z" fill="${GOLD}"/>
+    </svg>
   </div>`,
-  32
+  44
 );
 
 const MapView = ({

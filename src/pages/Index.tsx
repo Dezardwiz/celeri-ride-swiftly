@@ -2,7 +2,9 @@ import { useState, useCallback, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import MapView from "@/components/MapView";
-import WhereToInput from "@/components/WhereToInput";
+import HomeHeader from "@/components/HomeHeader";
+import HomeSheet from "@/components/HomeSheet";
+import MapHomeOverlay from "@/components/MapHomeOverlay";
 import DestinationSearch from "@/components/DestinationSearch";
 import RideConfirmCard from "@/components/RideConfirmCard";
 import SearchingDriver from "@/components/SearchingDriver";
@@ -19,6 +21,7 @@ import CancellationDialog from "@/components/CancellationDialog";
 import { useCancellationSettings, estimateCancellationFee, cancelRideRpc } from "@/hooks/useCancellation";
 import { useDriverInfo, estimateEtaMin } from "@/hooks/useDriverInfo";
 import { useSavedPlaces } from "@/hooks/useSavedPlaces";
+import { useAuth } from "@/contexts/AuthContext";
 
 type AppScreen =
   | "home"
@@ -56,6 +59,9 @@ const Index = () => {
   const ride = useRide();
   const settings = useCancellationSettings();
   const savedPlaces = useSavedPlaces();
+  const { user } = useAuth();
+  const userName =
+    (user?.user_metadata?.full_name as string | undefined) ?? user?.email?.split("@")[0] ?? null;
   const assignedDriver = useDriverInfo(ride.currentRide?.driver_id ?? null);
   const etaToPickup = estimateEtaMin(assignedDriver, userLocation);
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -178,6 +184,7 @@ const Index = () => {
   const showRoute = ["confirm", "accepted", "arriving", "arrived", "in_progress"].includes(screen);
   const isSearching = screen === "searching";
   const showDriver = ["accepted", "arriving", "arrived", "in_progress"].includes(screen);
+  const isHome = screen === "home" && activeTab === "home";
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-background">
@@ -189,14 +196,54 @@ const Index = () => {
         dropoffLocation={dropoffCoords ?? { lat: (userLocation?.lat ?? MONTES_CLAROS.center.lat) + 0.015, lng: (userLocation?.lng ?? MONTES_CLAROS.center.lng) + 0.01 }}
       />
 
-      <div className="absolute left-4 top-4 z-30 flex items-center gap-2">
-        <img src={geleriLogo} alt="Celeri" className="h-9 w-9 rounded-lg" />
-        <h1 className="font-display text-xl font-bold uppercase tracking-widest text-foreground">CELERI</h1>
-      </div>
+      {isHome ? (
+        <>
+          <HomeHeader
+            onMenu={() => setActiveTab("profile")}
+            onNotifications={() => toast.info("Sem notificações novas")}
+          />
+          <MapHomeOverlay
+            onPromos={() => toast.info("Use o cupom BEMVINDO20 na sua primeira corrida!")}
+            onRecenter={() => {
+              if (!navigator.geolocation) return;
+              navigator.geolocation.getCurrentPosition(
+                (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                () => {},
+                { enableHighAccuracy: true, timeout: 8000 }
+              );
+            }}
+          />
+        </>
+      ) : (
+        <div className="absolute left-4 top-4 z-30 flex items-center gap-2">
+          <img src={geleriLogo} alt="Celeri" className="h-9 w-9 rounded-lg" />
+          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-foreground">CELERI</h1>
+        </div>
+      )}
 
       <AnimatePresence mode="wait">
-        {screen === "home" && activeTab === "home" && (
-          <WhereToInput key="where-to" onFocus={() => setScreen("search")} />
+        {isHome && (
+          <HomeSheet
+            key="home-sheet"
+            userName={userName}
+            places={savedPlaces.places}
+            history={savedPlaces.history}
+            onOpenSearch={() => setScreen("search")}
+            onSelectDestination={(addr, coords) => handleDestinationSelect(addr, coords)}
+            onOpenFavorites={() => setScreen("search")}
+            onViewMore={() => setScreen("search")}
+            onUseCurrentLocation={() => {
+              if (!navigator.geolocation) return;
+              navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                  setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                  toast.success("Localização atualizada");
+                },
+                () => toast.error("Não foi possível obter sua localização"),
+                { enableHighAccuracy: true, timeout: 8000 }
+              );
+            }}
+          />
         )}
         {screen === "search" && (
           <DestinationSearch
