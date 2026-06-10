@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import MapView from "@/components/MapView";
-import WhereToInput from "@/components/WhereToInput";
 import HomeHeader from "@/components/HomeHeader";
 import HomeSheet from "@/components/HomeSheet";
 import MapHomeOverlay from "@/components/MapHomeOverlay";
