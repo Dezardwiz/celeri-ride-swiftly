@@ -17,38 +17,52 @@ type Stats = {
 };
 
 const DriverStats = () => {
-  const { driver } = useDriver();
+  const { driver, loading: driverLoading } = useDriver();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<Stats | null>(null);
   const [period, setPeriod] = useState<7 | 30>(7);
 
   useEffect(() => {
-    if (!driver) return;
+    if (driverLoading) return;
+    if (!driver) {
+      setStats({
+        totalRides: 0, completed: 0, canceledByDriver: 0, canceledByPassenger: 0,
+        acceptanceRate: 0, cancellationRate: 0, ridesPerHour: 0, avgEarnings: 0,
+        totalGross: 0, totalNet: 0,
+      });
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const since = new Date(Date.now() - period * 24 * 60 * 60 * 1000).toISOString();
 
     (async () => {
-      const [ridesRes, cancRes, payRes] = await Promise.all([
-        supabase
-          .from("rides")
-          .select("id,status,created_at,started_at,completed_at,final_price,estimated_price")
-          .eq("driver_id", driver.id)
-          .gte("created_at", since),
-        supabase
-          .from("cancellations")
-          .select("ride_id,canceled_by,created_at")
-          .eq("driver_id", driver.id)
-          .gte("created_at", since),
-        supabase
-          .from("driver_payouts")
-          .select("amount,created_at")
-          .eq("driver_id", driver.id)
-          .gte("created_at", since),
-      ]);
+      try {
+        const [ridesRes, cancRes, payRes] = await Promise.all([
+          supabase
+            .from("rides")
+            .select("id,status,created_at,started_at,completed_at,final_price,estimated_price")
+            .eq("driver_id", driver.id)
+            .gte("created_at", since),
+          supabase
+            .from("cancellations")
+            .select("ride_id,canceled_by,created_at")
+            .eq("driver_id", driver.id)
+            .gte("created_at", since),
+          supabase
+            .from("driver_payouts")
+            .select("amount,created_at")
+            .eq("driver_id", driver.id)
+            .gte("created_at", since),
+        ]);
 
-      const rides = ridesRes.data ?? [];
-      const cancs = cancRes.data ?? [];
-      const payouts = payRes.data ?? [];
+        if (ridesRes.error) console.warn("[DriverStats] rides:", ridesRes.error.message);
+        if (cancRes.error) console.warn("[DriverStats] cancellations:", cancRes.error.message);
+        if (payRes.error) console.warn("[DriverStats] payouts:", payRes.error.message);
+
+        const rides = ridesRes.data ?? [];
+        const cancs = cancRes.data ?? [];
+        const payouts = payRes.data ?? [];
 
       const completed = rides.filter((r) => r.status === "COMPLETED").length;
       const canceledByDriver = cancs.filter((c) => c.canceled_by === "driver").length;
@@ -71,14 +85,23 @@ const DriverStats = () => {
       const totalNet = payouts.reduce((s, p) => s + (p.amount ?? 0), 0);
       const avgEarnings = completed > 0 ? totalNet / completed : 0;
 
-      setStats({
-        totalRides, completed, canceledByDriver, canceledByPassenger,
-        acceptanceRate, cancellationRate, ridesPerHour, avgEarnings,
-        totalGross, totalNet,
-      });
-      setLoading(false);
+        setStats({
+          totalRides, completed, canceledByDriver, canceledByPassenger,
+          acceptanceRate, cancellationRate, ridesPerHour, avgEarnings,
+          totalGross, totalNet,
+        });
+      } catch (e) {
+        console.error("[DriverStats] error:", e);
+        setStats({
+          totalRides: 0, completed: 0, canceledByDriver: 0, canceledByPassenger: 0,
+          acceptanceRate: 0, cancellationRate: 0, ridesPerHour: 0, avgEarnings: 0,
+          totalGross: 0, totalNet: 0,
+        });
+      } finally {
+        setLoading(false);
+      }
     })();
-  }, [driver?.id, period]);
+  }, [driver?.id, driverLoading, period]);
 
   if (loading || !stats) {
     return (
