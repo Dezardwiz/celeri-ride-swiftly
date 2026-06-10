@@ -9,6 +9,7 @@ import {
   GraduationCap,
   Cross,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { SavedPlace, SearchHistoryItem } from "@/hooks/useSavedPlaces";
 
 interface Suggestion {
@@ -17,7 +18,7 @@ interface Suggestion {
   subtitle: string;
   minutes?: number;
   distanceKm?: number;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: LucideIcon;
   coords?: { lat: number; lng: number };
 }
 
@@ -227,7 +228,7 @@ const QuickChip = ({
   value,
   onClick,
 }: {
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: LucideIcon;
   label: string;
   value: string;
   onClick: () => void;
