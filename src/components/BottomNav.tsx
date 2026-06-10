@@ -1,4 +1,4 @@
-import { MapPin, Clock, Navigation, Wallet } from "lucide-react";
+import { Clock, Wallet, Home, User } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface BottomNavProps {
@@ -8,10 +8,10 @@ interface BottomNavProps {
 
 const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
   const tabs = [
-    { id: "home" as const, icon: Navigation, label: "CORRIDA" },
+    { id: "home" as const, icon: Home, label: "INÍCIO" },
     { id: "history" as const, icon: Clock, label: "HISTÓRICO" },
     { id: "wallet" as const, icon: Wallet, label: "CARTEIRA" },
-    { id: "profile" as const, icon: MapPin, label: "PERFIL" },
+    { id: "profile" as const, icon: User, label: "PERFIL" },
   ];
 
   return (
