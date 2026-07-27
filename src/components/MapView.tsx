@@ -226,31 +226,3 @@ const MapView = ({
 };
 
 export default MapView;
-      map.removeLayer(driverMarkerRef.current);
-      driverMarkerRef.current = null;
-    }
-  }, [driverLocation?.lat, driverLocation?.lng]);
-
-  // Searching pulse
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    pulseCirclesRef.current.forEach((c) => map.removeLayer(c));
-    pulseCirclesRef.current = [];
-
-    if (searching) {
-      const c1 = L.circle([pickupLocation.lat, pickupLocation.lng], {
-        radius: 300, color: "#2F6BFF", fillColor: "#2F6BFF", fillOpacity: 0.15, weight: 1,
-      }).addTo(map);
-      const c2 = L.circle([pickupLocation.lat, pickupLocation.lng], {
-        radius: 150, color: "#2F6BFF", fillColor: "#2F6BFF", fillOpacity: 0.25, weight: 1,
-      }).addTo(map);
-      pulseCirclesRef.current = [c1, c2];
-    }
-  }, [searching, pickupLocation.lat, pickupLocation.lng]);
-
-  return <div ref={containerRef} className="absolute inset-0 z-0" />;
-};
-
-export default MapView;
