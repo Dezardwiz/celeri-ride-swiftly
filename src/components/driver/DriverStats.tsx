@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Loader2, TrendingUp, CheckCircle2, XCircle, Zap, DollarSign } from "lucide-react";
+import { TrendingUp, CheckCircle2, XCircle, Zap, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDriver } from "@/hooks/useDriver";
+import { CardSkeleton } from "@/components/ui/ListSkeleton";
 
 type Stats = {
   totalRides: number;
@@ -105,8 +106,15 @@ const DriverStats = () => {
 
   if (loading || !stats) {
     return (
-      <div className="flex h-full items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      <div className="flex flex-col gap-4 p-4 pb-24">
+        <div className="h-11 w-full rounded-xl animate-shimmer" />
+        <div className="grid grid-cols-2 gap-3">
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+        <div className="h-40 w-full rounded-2xl animate-shimmer" />
       </div>
     );
   }

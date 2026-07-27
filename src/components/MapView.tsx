@@ -18,25 +18,38 @@ const makeIcon = (html: string, size: number) =>
   L.divIcon({ className: "", html, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
 
 const GOLD = "#F5B301";
+const ROUTE_MAIN = GOLD;
+const ROUTE_CASING = "#000000";
+
 const pickupIcon = makeIcon(
-  `<div style="width:18px;height:18px;background:#2F6BFF;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(47,107,255,0.6), 0 0 0 8px rgba(47,107,255,0.18);"></div>`,
+  `<div style="width:18px;height:18px;background:${GOLD};border-radius:50%;border:3px solid #0a0a0a;box-shadow:0 2px 10px rgba(245,179,1,0.65), 0 0 0 8px rgba(245,179,1,0.16);"></div>`,
   18
 );
 const dropoffIcon = makeIcon(
-  `<div style="width:16px;height:16px;background:${GOLD};border-radius:50%;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>`,
+  `<div style="width:16px;height:16px;background:#ffffff;border-radius:4px;border:3px solid ${GOLD};box-shadow:0 2px 8px rgba(0,0,0,0.5);"></div>`,
   16
 );
-const driverIcon = makeIcon(
-  `<div style="width:36px;height:44px;display:flex;align-items:flex-start;justify-content:center;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.4));">
+const driverIconHtml = (heading: number) =>
+  `<div style="width:36px;height:44px;display:flex;align-items:flex-start;justify-content:center;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.55));transform:rotate(${heading}deg);transition:transform 600ms cubic-bezier(0.16,1,0.3,1);">
     <svg width="36" height="44" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M18 0C8.06 0 0 8.06 0 18c0 12 18 26 18 26s18-14 18-26C36 8.06 27.94 0 18 0z" fill="${GOLD}"/>
       <circle cx="18" cy="18" r="13" fill="#0a0a0a"/>
       <path d="M12 19c0-3.31 2.69-6 6-6s6 2.69 6 6v3h-1.5v-3c0-2.49-2.01-4.5-4.5-4.5S13.5 16.51 13.5 19v3H12v-3z" fill="${GOLD}"/>
       <path d="M11 22h14v1.5H11z" fill="${GOLD}"/>
     </svg>
-  </div>`,
-  44
-);
+  </div>`;
+
+const driverIcon = (heading = 0) => makeIcon(driverIconHtml(heading), 44);
+
+/** Bearing in degrees from point a to point b. */
+const bearing = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const y = Math.sin(toRad(b.lng - a.lng)) * Math.cos(toRad(b.lat));
+  const x =
+    Math.cos(toRad(a.lat)) * Math.sin(toRad(b.lat)) -
+    Math.sin(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.cos(toRad(b.lng - a.lng));
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+};
 
 const MapView = ({
   showRoute = false,
@@ -51,7 +64,10 @@ const MapView = ({
   const dropoffMarkerRef = useRef<L.Marker | null>(null);
   const driverMarkerRef = useRef<L.Marker | null>(null);
   const routeLineRef = useRef<L.Polyline | null>(null);
+  const routeCasingRef = useRef<L.Polyline | null>(null);
   const pulseCirclesRef = useRef<L.Circle[]>([]);
+  const driverAnimRef = useRef<number | null>(null);
+  const driverPosRef = useRef<{ lat: number; lng: number } | null>(null);
 
   // Initialize map
   useEffect(() => {
@@ -91,7 +107,7 @@ const MapView = ({
     }
 
     if (!showRoute) {
-      map.setView([pickupLocation.lat, pickupLocation.lng], 15);
+      map.flyTo([pickupLocation.lat, pickupLocation.lng], 15, { duration: 0.8, easeLinearity: 0.25 });
     }
   }, [pickupLocation.lat, pickupLocation.lng, showRoute]);
 
@@ -102,6 +118,7 @@ const MapView = ({
 
     // Clean previous
     if (routeLineRef.current) { map.removeLayer(routeLineRef.current); routeLineRef.current = null; }
+    if (routeCasingRef.current) { map.removeLayer(routeCasingRef.current); routeCasingRef.current = null; }
     if (dropoffMarkerRef.current) { map.removeLayer(dropoffMarkerRef.current); dropoffMarkerRef.current = null; }
 
     if (showRoute) {
@@ -111,40 +128,79 @@ const MapView = ({
       fetchRoute(pickupLocation, dropoffLocation).then((result) => {
         if (!mapRef.current) return;
         if (result && result.coordinates.length > 0) {
-          routeLineRef.current = L.polyline(result.coordinates, {
-            color: "#2F6BFF", weight: 4, opacity: 0.8,
+          routeCasingRef.current = L.polyline(result.coordinates, {
+            color: ROUTE_CASING, weight: 9, opacity: 0.55, lineCap: "round", lineJoin: "round",
           }).addTo(map);
-          map.fitBounds(routeLineRef.current.getBounds(), { padding: [60, 60], maxZoom: 15 });
+          routeLineRef.current = L.polyline(result.coordinates, {
+            color: ROUTE_MAIN, weight: 5, opacity: 0.95, lineCap: "round", lineJoin: "round",
+            className: "animate-draw-route",
+          }).addTo(map);
+          map.flyToBounds(routeLineRef.current.getBounds(), {
+            paddingTopLeft: [48, 100], paddingBottomRight: [48, 320], maxZoom: 16, duration: 0.9,
+          });
         } else {
           // Fallback: straight line
           routeLineRef.current = L.polyline(
             [[pickupLocation.lat, pickupLocation.lng], [dropoffLocation.lat, dropoffLocation.lng]],
-            { color: "#2F6BFF", weight: 4, opacity: 0.8, dashArray: "8 4" }
+            { color: ROUTE_MAIN, weight: 4, opacity: 0.85, dashArray: "8 6", lineCap: "round" }
           ).addTo(map);
-          map.fitBounds(L.latLngBounds(
+          map.flyToBounds(L.latLngBounds(
             [pickupLocation.lat, pickupLocation.lng],
             [dropoffLocation.lat, dropoffLocation.lng]
-          ), { padding: [60, 60], maxZoom: 15 });
+          ), { paddingTopLeft: [48, 100], paddingBottomRight: [48, 320], maxZoom: 16, duration: 0.9 });
         }
       });
     }
   }, [showRoute, pickupLocation.lat, pickupLocation.lng, dropoffLocation.lat, dropoffLocation.lng]);
 
-  // Driver marker
+  // Driver marker — smooth interpolated movement + heading rotation
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    if (driverLocation) {
+    if (!driverLocation) {
+      if (driverAnimRef.current) cancelAnimationFrame(driverAnimRef.current);
       if (driverMarkerRef.current) {
-        driverMarkerRef.current.setLatLng([driverLocation.lat, driverLocation.lng]);
-      } else {
-        driverMarkerRef.current = L.marker([driverLocation.lat, driverLocation.lng], { icon: driverIcon }).addTo(map);
+        map.removeLayer(driverMarkerRef.current);
+        driverMarkerRef.current = null;
+        driverPosRef.current = null;
       }
-    } else if (driverMarkerRef.current) {
-      map.removeLayer(driverMarkerRef.current);
-      driverMarkerRef.current = null;
+      return;
     }
+
+    const target = { lat: driverLocation.lat, lng: driverLocation.lng };
+
+    if (!driverMarkerRef.current) {
+      driverMarkerRef.current = L.marker([target.lat, target.lng], { icon: driverIcon(0) }).addTo(map);
+      driverPosRef.current = target;
+      return;
+    }
+
+    const from = driverPosRef.current ?? target;
+    const heading = bearing(from, target);
+    const el = driverMarkerRef.current.getElement()?.firstElementChild as HTMLElement | null;
+    if (el && (Math.abs(target.lat - from.lat) > 1e-6 || Math.abs(target.lng - from.lng) > 1e-6)) {
+      el.style.transform = `rotate(${heading}deg)`;
+    }
+
+    const start = performance.now();
+    const DURATION = 900;
+    if (driverAnimRef.current) cancelAnimationFrame(driverAnimRef.current);
+
+    const step = (now: number) => {
+      const t = Math.min((now - start) / DURATION, 1);
+      const e = 1 - Math.pow(1 - t, 3);
+      const lat = from.lat + (target.lat - from.lat) * e;
+      const lng = from.lng + (target.lng - from.lng) * e;
+      driverMarkerRef.current?.setLatLng([lat, lng]);
+      driverPosRef.current = { lat, lng };
+      if (t < 1) driverAnimRef.current = requestAnimationFrame(step);
+    };
+    driverAnimRef.current = requestAnimationFrame(step);
+
+    return () => {
+      if (driverAnimRef.current) cancelAnimationFrame(driverAnimRef.current);
+    };
   }, [driverLocation?.lat, driverLocation?.lng]);
 
   // Searching pulse
@@ -157,10 +213,10 @@ const MapView = ({
 
     if (searching) {
       const c1 = L.circle([pickupLocation.lat, pickupLocation.lng], {
-        radius: 300, color: "#2F6BFF", fillColor: "#2F6BFF", fillOpacity: 0.15, weight: 1,
+        radius: 320, color: GOLD, fillColor: GOLD, fillOpacity: 0.1, weight: 1, opacity: 0.35,
       }).addTo(map);
       const c2 = L.circle([pickupLocation.lat, pickupLocation.lng], {
-        radius: 150, color: "#2F6BFF", fillColor: "#2F6BFF", fillOpacity: 0.25, weight: 1,
+        radius: 160, color: GOLD, fillColor: GOLD, fillOpacity: 0.18, weight: 1, opacity: 0.5,
       }).addTo(map);
       pulseCirclesRef.current = [c1, c2];
     }

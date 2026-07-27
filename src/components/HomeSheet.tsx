@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import DragSheet from "@/components/ui/DragSheet";
 import {
   LocateFixed,
   Plus,
@@ -90,19 +90,8 @@ const HomeSheet = ({
       : DEFAULT_SUGGESTIONS;
 
   return (
-    <motion.div
-      initial={{ y: 40, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: 40, opacity: 0 }}
-      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-      className="absolute inset-x-0 bottom-[72px] z-30 max-h-[68vh] overflow-y-auto no-scrollbar rounded-t-3xl border border-border/60 bg-background/98 backdrop-blur-md shadow-elevated"
-    >
-      {/* Handle */}
-      <div className="sticky top-0 z-10 flex justify-center bg-background/98 pt-2.5 pb-1">
-        <span className="h-1 w-10 rounded-full bg-muted-foreground/30" />
-      </div>
-
-      <div className="px-5 pb-6 pt-2 space-y-5">
+    <DragSheet initial="half" bottomOffset={72}>
+      <div className="px-5 pb-8 pt-1 space-y-5">
         {/* Greeting */}
         <div>
           {firstName && (
@@ -218,7 +207,7 @@ const HomeSheet = ({
           </div>
         </div>
       </div>
-    </motion.div>
+    </DragSheet>
   );
 };
 

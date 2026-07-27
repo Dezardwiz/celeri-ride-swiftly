@@ -1,10 +1,12 @@
-import { ArrowLeft, Plus, Wallet, ArrowUpRight, ArrowDownLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, Plus, Wallet, ArrowUpRight, ArrowDownLeft, RefreshCw, Receipt } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useWallet } from "@/hooks/useWallet";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import ListSkeleton from "@/components/ui/ListSkeleton";
+import EmptyState from "@/components/ui/EmptyState";
 
 interface WalletScreenProps {
   onBack: () => void;
@@ -140,15 +142,25 @@ const WalletScreen = ({ onBack }: WalletScreenProps) => {
             Histórico de Transações
           </h3>
           {loading ? (
-            <div className="text-center py-4 text-muted-foreground text-sm">Carregando...</div>
+            <ListSkeleton rows={4} className="p-0" />
           ) : transactions.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground text-sm">
-              Nenhuma transação ainda
-            </div>
+            <EmptyState
+              icon={Receipt}
+              title="Sem transações ainda"
+              description="Adicione créditos para pagar suas corridas mais rápido."
+              actionLabel="Adicionar créditos"
+              onAction={() => setShowAdd(true)}
+            />
           ) : (
             <div className="space-y-2">
-              {transactions.map((tx) => (
-                <div key={tx.id} className="flex items-center gap-3 rounded-md border border-border p-3">
+              {transactions.map((tx, i) => (
+                <motion.div
+                  key={tx.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.28, delay: Math.min(i * 0.03, 0.24), ease: [0.16, 1, 0.3, 1] }}
+                  className="flex items-center gap-3 rounded-md border border-border p-3"
+                >
                   <div className={`p-2 rounded-full bg-input ${typeColors[tx.type] || "text-foreground"}`}>
                     {tx.amount > 0 ? <ArrowDownLeft size={14} /> : <ArrowUpRight size={14} />}
                   </div>
@@ -161,7 +173,7 @@ const WalletScreen = ({ onBack }: WalletScreenProps) => {
                   <span className={`font-display text-sm ${tx.amount > 0 ? "text-green-500" : "text-destructive"}`}>
                     {tx.amount > 0 ? "+" : ""}R$ {Math.abs(tx.amount).toFixed(2).replace(".", ",")}
                   </span>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}

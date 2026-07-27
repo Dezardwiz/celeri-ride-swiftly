@@ -1,8 +1,10 @@
-import { ArrowLeft, Star, MapPin, ChevronRight, Loader2 } from "lucide-react";
+import { ArrowLeft, Star, MapPin, ChevronRight, Route } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import ListSkeleton from "@/components/ui/ListSkeleton";
+import EmptyState from "@/components/ui/EmptyState";
 
 interface HistoryScreenProps {
   onBack: () => void;
@@ -138,15 +140,33 @@ const HistoryScreen = ({ onBack }: HistoryScreenProps) => {
 
       <div className="flex-1 overflow-y-auto no-scrollbar pb-20">
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="animate-spin text-primary" size={28} />
-          </div>
+          <ListSkeleton rows={6} />
         ) : filteredRides.length === 0 ? (
-          <p className="text-center text-muted-foreground py-16 text-sm">Nenhuma corrida encontrada.</p>
+          <EmptyState
+            icon={Route}
+            title="Nenhuma corrida por aqui"
+            description={
+              statusFilter !== "all" || periodFilter !== "all"
+                ? "Nenhuma corrida encontrada com os filtros selecionados."
+                : "Assim que você fizer sua primeira viagem, ela aparece aqui."
+            }
+            actionLabel={statusFilter !== "all" || periodFilter !== "all" ? "Limpar filtros" : undefined}
+            onAction={
+              statusFilter !== "all" || periodFilter !== "all"
+                ? () => {
+                    setStatusFilter("all");
+                    setPeriodFilter("all");
+                  }
+                : undefined
+            }
+          />
         ) : (
-          filteredRides.map((ride) => (
-            <div
+          filteredRides.map((ride, i) => (
+            <motion.div
               key={ride.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, delay: Math.min(i * 0.03, 0.24), ease: [0.16, 1, 0.3, 1] }}
               className="flex w-full items-center gap-3 border-b border-border px-4 py-4 text-left"
             >
               <div className="rounded-full bg-card p-2">
@@ -172,7 +192,7 @@ const HistoryScreen = ({ onBack }: HistoryScreenProps) => {
                 )}
               </div>
               <ChevronRight size={14} className="text-muted-foreground" />
-            </div>
+            </motion.div>
           ))
         )}
       </div>
