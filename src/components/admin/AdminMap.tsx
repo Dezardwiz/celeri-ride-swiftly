@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import L from "leaflet";
+import { MONTES_CLAROS } from "@/lib/geo";
 import "leaflet/dist/leaflet.css";
 
 interface DriverLocation {
@@ -52,13 +53,18 @@ export const AdminMap = () => {
     if (!mapRef.current || loading) return;
 
     if (!mapInstance.current) {
+      const { center, bounds } = MONTES_CLAROS;
+      const maxBounds = L.latLngBounds([bounds.south, bounds.west], [bounds.north, bounds.east]);
       mapInstance.current = L.map(mapRef.current, {
-        center: [-5.09, -42.8],
+        center: [center.lat, center.lng],
         zoom: 13,
         zoomControl: true,
+        maxBounds: maxBounds.pad(0.1),
+        maxBoundsViscosity: 1.0,
+        minZoom: 12,
       });
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap",
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+        attribution: "&copy; OpenStreetMap &copy; CARTO",
       }).addTo(mapInstance.current);
     }
 
