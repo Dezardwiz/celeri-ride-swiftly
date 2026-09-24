@@ -1,4 +1,7 @@
 # Roadmap CELERI
 
 ## Em andamento
-- [ ] Mapa: remover mensagem "API key required" e deixar o mapa totalmente funcional em todas as telas (passageiro, motorista, admin)
+- (nenhuma tarefa aberta)
+
+## Concluído
+- [x] Mapa: todas as telas (passageiro, motorista, admin) com tema escuro e travadas nos limites de Montes Claros

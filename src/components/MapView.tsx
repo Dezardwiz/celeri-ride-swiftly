@@ -12,7 +12,7 @@ interface MapViewProps {
   dropoffLocation?: { lat: number; lng: number };
 }
 
-const TILE_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+const TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
 const makeIcon = (html: string, size: number) =>
   L.divIcon({ className: "", html, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
@@ -86,7 +86,7 @@ const MapView = ({
       minZoom: 12,
     });
 
-    L.tileLayer(TILE_URL).addTo(map);
+    L.tileLayer(TILE_URL, { className: "dark-tiles" }).addTo(map);
     mapRef.current = map;
 
     return () => {
