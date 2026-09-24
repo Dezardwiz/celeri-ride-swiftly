@@ -63,8 +63,9 @@ export const AdminMap = () => {
         maxBoundsViscosity: 1.0,
         minZoom: 12,
       });
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-        attribution: "&copy; OpenStreetMap &copy; CARTO",
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap",
+        className: "dark-tiles",
       }).addTo(mapInstance.current);
     }
 
