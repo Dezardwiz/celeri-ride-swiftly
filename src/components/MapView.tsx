@@ -86,7 +86,7 @@ const MapView = ({
       minZoom: 12,
     });
 
-    L.tileLayer(TILE_URL).addTo(map);
+    L.tileLayer(TILE_URL, { className: "dark-tiles" }).addTo(map);
     mapRef.current = map;
 
     return () => {

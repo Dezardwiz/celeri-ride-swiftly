@@ -88,7 +88,7 @@ const DriverRideNavigation = ({ ride, onAdvance, onComplete, onCancel }: Props) 
       maxBoundsViscosity: 1.0,
       minZoom: 12,
     });
-    L.tileLayer(TILE_URL).addTo(map);
+    L.tileLayer(TILE_URL, { className: "dark-tiles" }).addTo(map);
 
     // Add pickup & dropoff markers
     L.marker([pickup.lat, pickup.lng], { icon: pickupIcon }).addTo(map);
