@@ -5,6 +5,7 @@ import { MONTES_CLAROS } from "@/lib/geo";
 import { fetchRoute } from "@/lib/routing";
 import { Navigation, X, ChevronRight, CheckCircle2, MapPin, ExternalLink, MessageCircle } from "lucide-react";
 import { openExternalNavigation } from "@/lib/externalNav";
+import SosButton from "@/components/SosButton";
 import RideChatSheet from "@/components/RideChatSheet";
 import { useRideChat } from "@/hooks/useRideChat";
 import type { Tables } from "@/integrations/supabase/types";
@@ -163,7 +164,7 @@ const DriverRideNavigation = ({ ride, onAdvance, onComplete, onCancel }: Props) 
               {isGoingToPickup ? ride.origin_address : ride.destination_address}
             </p>
           </div>
-          <Navigation className="h-5 w-5 text-primary" />
+          <SosButton rideId={ride.id} role="driver" />
         </div>
       </div>
 

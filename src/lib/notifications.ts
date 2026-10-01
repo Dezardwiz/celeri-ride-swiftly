@@ -4,44 +4,85 @@ import { LocalNotifications } from "@capacitor/local-notifications";
 
 const isNative = Capacitor.isNativePlatform();
 
-// Simple notification sound using Web Audio API (web fallback)
 let audioCtx: AudioContext | null = null;
+const ctx = () => {
+  if (!audioCtx) audioCtx = new AudioContext();
+  if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
+  return audioCtx;
+};
 
-export function playNotificationSound() {
+/** Plays a sequence of [frequency, durationSec] tones. */
+function playTones(tones: [number, number][], volume = 0.3, type: OscillatorType = "sine") {
   try {
-    if (!audioCtx) {
-      audioCtx = new AudioContext();
+    const ac = ctx();
+    let t = ac.currentTime;
+    for (const [freq, dur] of tones) {
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(volume, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + dur);
+      osc.connect(gain);
+      gain.connect(ac.destination);
+      osc.start(t);
+      osc.stop(t + dur);
+      t += dur;
     }
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-    oscillator.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.15);
-    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime + 0.3);
-
-    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-
-    oscillator.start(audioCtx.currentTime);
-    oscillator.stop(audioCtx.currentTime + 0.5);
   } catch {
-    // Audio not supported
+    /* audio not supported */
   }
 }
 
-export async function vibrate() {
+export type SoundKind = "newRide" | "accepted" | "arrived" | "message" | "complete" | "sos";
+
+export function playSound(kind: SoundKind) {
+  switch (kind) {
+    case "newRide":
+      return playTones([[880, 0.15], [1100, 0.15], [880, 0.15], [1320, 0.3]], 0.4, "square");
+    case "accepted":
+      return playTones([[660, 0.12], [880, 0.25]]);
+    case "arrived":
+      return playTones([[880, 0.15], [880, 0.15], [1100, 0.35]], 0.35);
+    case "message":
+      return playTones([[1200, 0.08], [1500, 0.12]], 0.2);
+    case "complete":
+      return playTones([[523, 0.12], [659, 0.12], [784, 0.3]]);
+    case "sos":
+      return playTones([[1000, 0.2], [700, 0.2], [1000, 0.2], [700, 0.2]], 0.5, "sawtooth");
+  }
+}
+
+export function playNotificationSound() {
+  playSound("newRide");
+}
+
+/** Rings repeatedly until the returned stop() is called (or maxMs elapses). */
+let ringTimer: ReturnType<typeof setInterval> | null = null;
+export function startRinging(maxMs = 15000) {
+  stopRinging();
+  playSound("newRide");
+  vibrate();
+  ringTimer = setInterval(() => {
+    playSound("newRide");
+    vibrate();
+  }, 1500);
+  setTimeout(stopRinging, maxMs);
+}
+export function stopRinging() {
+  if (ringTimer) clearInterval(ringTimer);
+  ringTimer = null;
+}
+
+export async function vibrate(pattern: number[] = [200, 100, 200]) {
   try {
     if (isNative) {
       await Haptics.impact({ style: ImpactStyle.Heavy });
     } else if (navigator.vibrate) {
-      navigator.vibrate([200, 100, 200]);
+      navigator.vibrate(pattern);
     }
   } catch {
-    // Vibration/haptics not supported
+    /* not supported */
   }
 }
 
@@ -50,18 +91,9 @@ export async function showLocalNotification(title: string, body: string, data?: 
   try {
     const perm = await LocalNotifications.requestPermissions();
     if (perm.display !== "granted") return;
-
     await LocalNotifications.schedule({
       notifications: [
-        {
-          id: Date.now(),
-          title,
-          body,
-          extra: data,
-          sound: "default",
-          smallIcon: "ic_notification",
-          largeIcon: "ic_launcher",
-        },
+        { id: Date.now() % 2147483647, title, body, extra: data, sound: "default", smallIcon: "ic_notification", largeIcon: "ic_launcher" },
       ],
     });
   } catch (e) {
@@ -70,13 +102,8 @@ export async function showLocalNotification(title: string, body: string, data?: 
 }
 
 export async function notifyNewRide(origin?: string, destination?: string) {
-  playNotificationSound();
-  await vibrate();
-
+  startRinging();
   if (isNative && origin && destination) {
-    await showLocalNotification(
-      "🏍️ Nova corrida disponível!",
-      `${origin} → ${destination}`
-    );
+    await showLocalNotification("🏍️ Nova corrida disponível!", `${origin} → ${destination}`);
   }
 }

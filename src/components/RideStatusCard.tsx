@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import SosButton from "@/components/SosButton";
+import { playSound, vibrate } from "@/lib/notifications";
 import { Phone, MessageCircle, Star, Navigation, X, Share2, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -21,6 +23,15 @@ interface RideStatusCardProps {
 const RideStatusCard = ({ status, onAdvance, onComplete, onCancel, driver, etaMin, rideId }: RideStatusCardProps) => {
   const [chatOpen, setChatOpen] = useState(false);
   const { unreadCount } = useRideChat(rideId ?? null, "passenger");
+  const prevStatus = useRef<RideStatus | null>(null);
+  useEffect(() => {
+    if (prevStatus.current !== status) {
+      if (status === "accepted") playSound("accepted");
+      if (status === "arrived") { playSound("arrived"); vibrate([300, 100, 300]); }
+      if (status === "in_progress" && prevStatus.current) playSound("accepted");
+      prevStatus.current = status;
+    }
+  }, [status]);
   const labels: Record<RideStatus, { label: string; color: string }> = {
     accepted: { label: "Corrida Aceita", color: "text-primary" },
     arriving: { label: "Aproximando-se", color: "text-primary" },
@@ -67,6 +78,9 @@ const RideStatusCard = ({ status, onAdvance, onComplete, onCancel, driver, etaMi
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
       className="absolute bottom-20 left-0 right-0 z-40 px-4"
     >
+      <div className="mb-2 flex justify-end">
+        <SosButton rideId={rideId} role="passenger" />
+      </div>
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         {/* Status bar */}
         <div className="bg-input px-4 py-2 flex items-center justify-between">

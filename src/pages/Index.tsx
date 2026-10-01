@@ -137,10 +137,10 @@ const Index = () => {
   const handleCompleteRide = useCallback(() => setScreen("complete"), []);
 
   const handleRideSubmit = useCallback(
-    async (payment: "pix" | "card" | "cash" | "wallet", rating: number) => {
+    async (payment: "pix" | "card" | "cash" | "wallet", rating: number, comment?: string) => {
       await ride.completeRide(parseFloat(price.toFixed(2)));
       await ride.savePayment(payment === "wallet" ? "pix" : payment, parseFloat(price.toFixed(2)));
-      if (rating > 0) await ride.saveRating(rating);
+      if (rating > 0) await ride.saveRating(rating, comment);
     },
     [ride, price]
   );

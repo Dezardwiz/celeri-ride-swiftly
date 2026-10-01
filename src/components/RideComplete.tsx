@@ -1,13 +1,14 @@
 import { Star, X, DollarSign, CreditCard, QrCode, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { playSound } from "@/lib/notifications";
 import { useWallet } from "@/hooks/useWallet";
 
 interface RideCompleteProps {
   price: number;
   distanceKm: number;
   durationMin: number;
-  onSubmit: (payment: "pix" | "card" | "cash" | "wallet", rating: number) => void;
+  onSubmit: (payment: "pix" | "card" | "cash" | "wallet", rating: number, comment?: string) => void;
   onClose: () => void;
 }
 
@@ -15,6 +16,12 @@ const RideComplete = ({ price, distanceKm, durationMin, onSubmit, onClose }: Rid
   const [rating, setRating] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<"pix" | "card" | "cash" | "wallet">("wallet");
   const [submitted, setSubmitted] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
+  const [comment, setComment] = useState("");
+  const tagOptions = rating >= 4
+    ? ["Pilotagem segura", "Pontual", "Educado", "Capacete limpo", "Rota ótima"]
+    : ["Direção arriscada", "Atrasou", "Rota longa", "Sem capacete extra", "Falta de educação"];
+  const toggleTag = (t: string) => setTags((p) => (p.includes(t) ? p.filter((x) => x !== t) : [...p, t]));
   const { wallet } = useWallet();
 
   const balance = wallet?.balance ?? 0;
@@ -28,8 +35,10 @@ const RideComplete = ({ price, distanceKm, durationMin, onSubmit, onClose }: Rid
   ];
 
   const handleSubmit = () => {
-    onSubmit(paymentMethod, rating);
+    const full = [tags.join(", "), comment.trim()].filter(Boolean).join(" — ");
+    onSubmit(paymentMethod, rating, full || undefined);
     setSubmitted(true);
+    playSound("complete");
     setTimeout(onClose, 1500);
   };
 
@@ -130,6 +139,28 @@ const RideComplete = ({ price, distanceKm, durationMin, onSubmit, onClose }: Rid
                   </button>
                 ))}
               </div>
+              {rating > 0 && (
+                <div className="space-y-2 pt-1">
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {tagOptions.map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => toggleTag(t)}
+                        className={`rounded-full border px-3 py-1 text-xs transition-colors ${tags.includes(t) ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value.slice(0, 300))}
+                    placeholder="Comentário (opcional)"
+                    rows={2}
+                    className="w-full resize-none rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
+                  />
+                </div>
+              )}
             </div>
 
             <button

@@ -1,3 +1,4 @@
+import { playSound } from "@/lib/notifications";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -52,6 +53,7 @@ export function useRideChat(rideId: string | null | undefined, role: "passenger"
             setMessages((prev) => {
               const msg = payload.new as RideMessage;
               if (prev.some((m) => m.id === msg.id)) return prev;
+              if (msg.sender_role !== role) playSound("message");
               return [...prev, msg];
             });
           }

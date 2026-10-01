@@ -6,7 +6,7 @@ import { useCommissionPct } from "@/hooks/useCommissionPct";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { notifyNewRide } from "@/lib/notifications";
+import { notifyNewRide, stopRinging, playSound } from "@/lib/notifications";
 import RestModeDialog from "@/components/driver/RestModeDialog";
 import { startBackgroundTracking, stopBackgroundTracking } from "@/lib/backgroundGeolocation";
 import type { Tables } from "@/integrations/supabase/types";
@@ -85,6 +85,7 @@ const DriverHome = () => {
         description: "Uma nova corrida apareceu próxima a você",
       });
     }
+    if (visibleRides.length === 0) stopRinging();
     prevRideCountRef.current = visibleRides.length;
   }, [visibleRides.length, isOnline, isResting]);
 
@@ -121,6 +122,7 @@ const DriverHome = () => {
   };
 
   const acceptRide = async (ride: Ride) => {
+    stopRinging();
     if (!driver) return;
     setAcceptingId(ride.id);
     const { data, error } = await supabase.rpc("accept_offered_ride", { _ride_id: ride.id });
@@ -134,6 +136,7 @@ const DriverHome = () => {
         "Não foi possível aceitar a corrida"
       );
     } else {
+      playSound("accepted");
       toast.success("Corrida aceita! Vá até o passageiro.");
       // Notify passenger
       supabase.functions.invoke("send-ride-event", {
@@ -149,6 +152,7 @@ const DriverHome = () => {
   };
 
   const declineRide = async (ride: Ride) => {
+    stopRinging();
     await supabase.rpc("decline_offered_ride", { _ride_id: ride.id });
     toast("Corrida recusada");
   };
