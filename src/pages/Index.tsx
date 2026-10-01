@@ -72,14 +72,22 @@ const Index = () => {
   const durationMin = Math.max(Math.round((distanceKm / 30) * 60), 1); // ~30km/h avg
   const price = calculatePrice(tariff, distanceKm, durationMin, surge.multiplier);
 
+  // Live passenger position (real-time tracking)
   useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
+    if (!navigator.geolocation) { setUserLocation(MONTES_CLAROS.center); return; }
+    const id = navigator.geolocation.watchPosition(
       (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => setUserLocation(MONTES_CLAROS.center),
-      { enableHighAccuracy: true, timeout: 10000 }
+      () => setUserLocation((prev) => prev ?? MONTES_CLAROS.center),
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
     );
+    return () => navigator.geolocation.clearWatch(id);
   }, []);
+
+  // Real-time driver position from backend
+  const liveDriverLocation =
+    assignedDriver?.location_lat != null && assignedDriver?.location_lng != null
+      ? { lat: Number(assignedDriver.location_lat), lng: Number(assignedDriver.location_lng) }
+      : undefined;
 
   const handleDestinationSelect = useCallback((dest: string, coords?: { lat: number; lng: number }) => {
     setDestination(dest);
@@ -191,7 +199,7 @@ const Index = () => {
       <MapView
         showRoute={showRoute}
         searching={isSearching}
-        driverLocation={showDriver ? { lat: (userLocation?.lat ?? MONTES_CLAROS.center.lat) + 0.004, lng: (userLocation?.lng ?? MONTES_CLAROS.center.lng) + 0.004 } : undefined}
+        driverLocation={showDriver ? liveDriverLocation : undefined}
         pickupLocation={userLocation ?? MONTES_CLAROS.center}
         dropoffLocation={dropoffCoords ?? { lat: (userLocation?.lat ?? MONTES_CLAROS.center.lat) + 0.015, lng: (userLocation?.lng ?? MONTES_CLAROS.center.lng) + 0.01 }}
       />
