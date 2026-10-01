@@ -219,13 +219,14 @@ export function useRide() {
     });
   };
 
-  const saveRating = async (score: number) => {
+  const saveRating = async (score: number, comment?: string) => {
     if (!currentRide || !user || !currentRide.driver_id) return;
     await supabase.from("ratings").insert({
       ride_id: currentRide.id,
       from_user_id: user.id,
       to_user_id: currentRide.driver_id,
       score,
+      comment: comment ?? null,
     });
   };
 
