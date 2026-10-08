@@ -279,7 +279,7 @@ const Index = () => {
             surgeLabel={surge.label}
           />
         )}
-        {screen === "searching" && <SearchingDriver key="searching" onFound={handleDriverFound} />}
+        {screen === "searching" && <SearchingDriver key="searching" onFound={handleDriverFound} onCancel={requestCancel} />}
         {(screen === "accepted" || screen === "arriving" || screen === "arrived" || screen === "in_progress") && (
           <RideStatusCard
             key="ride-status"
