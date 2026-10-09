@@ -64,6 +64,7 @@ const DestinationSearch = ({
   originLabel,
   onSelectOrigin,
 }: DestinationSearchProps) => {
+  const [query, setQuery] = useState("");
   const [field, setField] = useState<"origin" | "destination">("destination");
   const [pending, setPending] = useState<LocationResult | null>(null);
   const [houseNumber, setHouseNumber] = useState("");
@@ -88,7 +89,6 @@ const DestinationSearch = ({
     setHouseNumber("");
     setPending(loc);
   };
-  const [query, setQuery] = useState("");
   const [results, setResults] = useState<(LocationResult & { hasNumber?: boolean })[]>([]);
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
