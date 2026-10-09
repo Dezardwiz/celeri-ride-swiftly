@@ -12,6 +12,7 @@ interface NominatimResult {
   lon: string;
   address?: {
     road?: string;
+    house_number?: string;
     suburb?: string;
     city?: string;
     state?: string;
@@ -33,6 +34,15 @@ interface DestinationSearchProps {
   history?: SearchHistoryItem[];
   onSaveCurrent?: (place: Omit<SavedPlace, "id" | "user_id">) => Promise<any>;
   onDeletePlace?: (id: string) => Promise<void> | void;
+  originLabel?: string;
+  onSelectOrigin?: (address: string | null, coords: { lat: number; lng: number } | null) => void;
+}
+
+// Separa "Rua Tupis 450" / "Rua Tupis, 450" em rua + número
+function splitNumber(q: string): { street: string; number: string | null } {
+  const m = q.trim().match(/^(.*?)[,\s]+(?:n[ºo°.]?\s*)?(\d{1,5})\s*$/i);
+  if (m && m[1].trim().length >= 3) return { street: m[1].trim(), number: m[2] };
+  return { street: q.trim(), number: null };
 }
 
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
@@ -51,9 +61,35 @@ const DestinationSearch = ({
   history = [],
   onSaveCurrent,
   onDeletePlace,
+  originLabel,
+  onSelectOrigin,
 }: DestinationSearchProps) => {
+  const [field, setField] = useState<"origin" | "destination">("destination");
+  const [pending, setPending] = useState<LocationResult | null>(null);
+  const [houseNumber, setHouseNumber] = useState("");
+  const typedNumber = splitNumber(query).number;
+
+  const finalize = (loc: LocationResult, num: string | null) => {
+    const label = num ? `${loc.name}, ${num}` : loc.name;
+    const full = loc.address ? `${label} - ${loc.address}` : label;
+    if (field === "origin" && onSelectOrigin) {
+      onSelectOrigin(full, { lat: loc.lat, lng: loc.lng });
+      setField("destination");
+      setQuery("");
+      setPending(null);
+      return;
+    }
+    onSelect(full, { lat: loc.lat, lng: loc.lng });
+  };
+
+  const pick = (loc: LocationResult & { hasNumber?: boolean }) => {
+    if (loc.hasNumber) return finalize(loc, null);
+    if (typedNumber) return finalize(loc, typedNumber);
+    setHouseNumber("");
+    setPending(loc);
+  };
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<LocationResult[]>([]);
+  const [results, setResults] = useState<(LocationResult & { hasNumber?: boolean })[]>([]);
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
   const [newLabel, setNewLabel] = useState("");
@@ -73,17 +109,25 @@ const DestinationSearch = ({
       try {
         const { bounds } = MONTES_CLAROS;
         const viewbox = `&viewbox=${bounds.west},${bounds.north},${bounds.east},${bounds.south}&bounded=1`;
-        const res = await fetch(
-          `${NOMINATIM_URL}?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=8&countrycodes=br${viewbox}`,
-          { headers: { "Accept-Language": "pt-BR" } }
-        );
-        const data: NominatimResult[] = await res.json();
+        const { street, number } = splitNumber(query);
+        const get = async (q: string) => {
+          const r = await fetch(
+            `${NOMINATIM_URL}?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=8&countrycodes=br${viewbox}`,
+            { headers: { "Accept-Language": "pt-BR" } }
+          );
+          return (await r.json()) as NominatimResult[];
+        };
+        let data: NominatimResult[] = number ? await get(`${street} ${number}`) : await get(query);
+        if (number && !data.some((d) => d.address?.house_number)) data = await get(street);
         setResults(
           data
             .filter((r) => isWithinMontesclaros(parseFloat(r.lat), parseFloat(r.lon)))
             .map((r) => ({
-              name: r.display_name.split(",")[0],
-              address: r.display_name.split(",").slice(1, 3).join(",").trim(),
+              hasNumber: !!r.address?.house_number,
+              name: r.address?.road
+                ? r.address.house_number ? `${r.address.road}, ${r.address.house_number}` : r.address.road
+                : r.display_name.split(",")[0],
+              address: r.address?.suburb ?? r.display_name.split(",").slice(1, 3).join(",").trim(),
               lat: parseFloat(r.lat),
               lng: parseFloat(r.lon),
             }))
@@ -134,21 +178,36 @@ const DestinationSearch = ({
           <button onClick={onBack} className="text-foreground p-1">
             <ArrowLeft size={20} />
           </button>
-          <h2 className="font-display text-lg uppercase tracking-wider">Destino</h2>
+          <h2 className="font-display text-lg uppercase tracking-wider">{field === "origin" ? "Embarque" : "Destino"}</h2>
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center gap-3 rounded-md bg-input p-3">
+          <button
+            onClick={() => { if (onSelectOrigin) { setField(field === "origin" ? "destination" : "origin"); setQuery(""); } }}
+            className={`flex w-full items-center gap-3 rounded-md bg-input p-3 text-left ${field === "origin" ? "ring-1 ring-primary" : ""}`}
+          >
             <Navigation size={14} className="text-primary flex-shrink-0" />
-            <span className="text-sm text-muted-foreground">Sua localização</span>
-          </div>
+            <span className="flex-1 truncate text-sm text-muted-foreground">
+              {field === "origin" ? "Digite onde você está (rua e número)" : originLabel || "Sua localização"}
+            </span>
+            {onSelectOrigin && <span className="text-[11px] font-medium uppercase text-primary">{field === "origin" ? "Cancelar" : "Alterar"}</span>}
+          </button>
+          {field === "origin" && onSelectOrigin && originLabel && (
+            <button
+              onClick={() => { onSelectOrigin(null, null); setField("destination"); }}
+              className="text-xs text-primary underline"
+            >
+              Usar minha localização (GPS)
+            </button>
+          )}
           <div className="flex items-center gap-3 rounded-md bg-input p-3 ring-1 ring-primary">
             <Search size={14} className="text-primary flex-shrink-0" />
             <input
               autoFocus
+              key={field}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Para onde?"
+              placeholder={field === "origin" ? "Ex: Rua Bocaiúva 450" : "Para onde? Ex: Rua Tupis 450"}
               className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
             />
             {loading && <Loader2 size={14} className="text-primary animate-spin flex-shrink-0" />}
@@ -158,7 +217,7 @@ const DestinationSearch = ({
 
       {/* Results */}
       <div className="flex-1 overflow-y-auto no-scrollbar">
-        {showSuggestions && (
+        {showSuggestions && field === "destination" && (
           <>
             {/* Saved places */}
             {savedPlaces.length > 0 && (
@@ -245,14 +304,16 @@ const DestinationSearch = ({
         {!showSuggestions && results.map((location, i) => (
           <div key={`${location.lat}-${location.lng}-${i}`} className="flex items-center border-b border-border">
             <button
-              onClick={() => onSelect(location.name, { lat: location.lat, lng: location.lng })}
+              onClick={() => pick(location)}
               className="flex flex-1 items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-card"
             >
               <div className="mt-0.5 rounded-full bg-card p-2">
                 <MapPin size={14} className="text-muted-foreground" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{location.name}</p>
+                <p className="text-sm font-medium text-foreground truncate">
+                  {location.name}{!location.hasNumber && typedNumber ? `, ${typedNumber}` : ""}
+                </p>
                 <p className="text-xs text-muted-foreground truncate">{location.address}</p>
               </div>
             </button>
@@ -268,6 +329,36 @@ const DestinationSearch = ({
           </div>
         ))}
       </div>
+
+      {pending && (
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 sm:items-center" onClick={() => setPending(null)}>
+          <div className="w-full max-w-md rounded-t-2xl border border-border bg-card p-4 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-display text-base font-semibold mb-1">Qual o número?</h3>
+            <p className="text-xs text-muted-foreground mb-3">{pending.name}{pending.address ? ` - ${pending.address}` : ""}</p>
+            <input
+              autoFocus
+              inputMode="numeric"
+              value={houseNumber}
+              onChange={(e) => setHouseNumber(e.target.value.replace(/\D/g, "").slice(0, 5))}
+              onKeyDown={(e) => { if (e.key === "Enter" && houseNumber) finalize(pending, houseNumber); }}
+              placeholder="Ex: 450"
+              className="w-full rounded-md bg-input p-3 text-lg font-semibold text-foreground outline-none mb-3"
+            />
+            <div className="flex gap-2">
+              <button onClick={() => finalize(pending, null)} className="flex-1 rounded-md border border-border py-3 text-sm text-muted-foreground">
+                Sem número
+              </button>
+              <button
+                onClick={() => finalize(pending, houseNumber)}
+                disabled={!houseNumber}
+                className="flex-1 rounded-md bg-primary py-3 text-sm font-medium text-primary-foreground disabled:opacity-50"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {adding && selectedForSave && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 sm:items-center" onClick={() => setAdding(false)}>
