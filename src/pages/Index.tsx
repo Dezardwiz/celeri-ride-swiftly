@@ -52,7 +52,10 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<"home" | "history" | "wallet" | "profile">("home");
   const [destination, setDestination] = useState("");
   const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [gpsLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [gpsFailed, setGpsFailed] = useState(false);
+  const [manualOrigin, setManualOrigin] = useState<{ address: string; lat: number; lng: number } | null>(null);
+  const userLocation = manualOrigin ? { lat: manualOrigin.lat, lng: manualOrigin.lng } : gpsLocation;
 
   const tariff = useActiveTariff();
   const surge = useActiveSurge();
@@ -77,7 +80,10 @@ const Index = () => {
     if (!navigator.geolocation) { setUserLocation(MONTES_CLAROS.center); return; }
     const id = navigator.geolocation.watchPosition(
       (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => setUserLocation((prev) => prev ?? MONTES_CLAROS.center),
+      () => {
+        setGpsFailed(true);
+        setUserLocation((prev) => prev ?? MONTES_CLAROS.center);
+      },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
     );
     return () => navigator.geolocation.clearWatch(id);
@@ -100,7 +106,7 @@ const Index = () => {
     if (!userLocation || !dropoffCoords) return;
     const finalPrice = Math.max(0, price - (coupon?.discount ?? 0));
     const created = await ride.createRide({
-      originAddress: "Sua localização",
+      originAddress: manualOrigin?.address ?? "Sua localização (GPS)",
       originLat: userLocation.lat,
       originLng: userLocation.lng,
       destinationAddress: destination,
@@ -123,7 +129,13 @@ const Index = () => {
     } else {
       toast.error("Erro ao solicitar corrida");
     }
-  }, [userLocation, dropoffCoords, destination, distanceKm, durationMin, price, ride]);
+  }, [userLocation, dropoffCoords, destination, distanceKm, durationMin, price, ride, manualOrigin]);
+
+  useEffect(() => {
+    if (gpsFailed && !manualOrigin && screen === "search") {
+      toast.warning("Não conseguimos achar sua localização. Toque em \"Alterar\" e digite onde você está.");
+    }
+  }, [gpsFailed, manualOrigin, screen]);
 
   const handleDriverFound = useCallback(() => setScreen("accepted"), []);
 
@@ -263,6 +275,10 @@ const Index = () => {
             history={savedPlaces.history}
             onSaveCurrent={savedPlaces.addPlace}
             onDeletePlace={savedPlaces.deletePlace}
+            originLabel={manualOrigin?.address ?? (gpsFailed ? "Localização não encontrada" : undefined)}
+            onSelectOrigin={(address, coords) =>
+              setManualOrigin(address && coords ? { address, ...coords } : null)
+            }
           />
         )}
         {screen === "confirm" && (
