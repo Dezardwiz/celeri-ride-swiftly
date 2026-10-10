@@ -102,7 +102,10 @@ const Index = () => {
     savedPlaces.recordSearch(dest, coords?.lat, coords?.lng);
   }, [savedPlaces]);
 
-  const handleConfirmRide = useCallback(async (coupon?: { code: string; discount: number }) => {
+  const handleConfirmRide = useCallback(async (
+    coupon?: { code: string; discount: number },
+    opts?: { payment: "pix" | "cash" | "card"; changeFor: number; usePin: boolean }
+  ) => {
     if (!userLocation || !dropoffCoords) return;
     const finalPrice = Math.max(0, price - (coupon?.discount ?? 0));
     const created = await ride.createRide({
@@ -115,6 +118,9 @@ const Index = () => {
       estimatedDistanceKm: parseFloat(distanceKm.toFixed(2)),
       estimatedDurationMin: durationMin,
       estimatedPrice: parseFloat(finalPrice.toFixed(2)),
+      paymentMethod: opts?.payment,
+      changeFor: opts?.changeFor,
+      usePin: opts?.usePin,
     });
     if (created) {
       if (coupon) {

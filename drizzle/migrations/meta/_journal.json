@@ -8,6 +8,13 @@
       "when": 1791495976367,
       "tag": "0000_payment_autocreate_wallet",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791603414387,
+      "tag": "0001_payment_prefs_and_pin",
+      "breakpoints": true
     }
   ]
 }
