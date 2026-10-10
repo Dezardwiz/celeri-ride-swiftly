@@ -11,7 +11,10 @@ interface RideConfirmCardProps {
   estimatedTime: number;
   estimatedDistance: number;
   loading?: boolean;
-  onConfirm: (coupon?: { code: string; discount: number }) => void;
+  onConfirm: (
+    coupon?: { code: string; discount: number },
+    opts?: { payment: "pix" | "cash" | "card"; changeFor: number; usePin: boolean }
+  ) => void;
   onCancel: () => void;
   surgeMultiplier?: number;
   surgeLabel?: string | null;
@@ -35,6 +38,7 @@ const RideConfirmCard = ({
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
   const [payment, setPayment] = useState<"pix" | "cash" | "card">("pix");
   const [changeFor, setChangeFor] = useState(0);
+  const [usePin, setUsePin] = useState(false);
 
   const finalPrice = Math.max(0, estimatedPrice - (appliedCoupon?.discount ?? 0));
   const priceStr = `R$ ${finalPrice.toFixed(2).replace(".", ",")}`;
@@ -227,6 +231,20 @@ const RideConfirmCard = ({
           </button>
         )}
 
+        <button
+          type="button"
+          onClick={() => setUsePin((v) => !v)}
+          className="flex w-full items-center justify-between rounded-lg border border-border bg-input px-3 py-2.5 text-left"
+        >
+          <div>
+            <p className="text-xs font-medium text-foreground">Código de segurança no embarque</p>
+            <p className="text-[11px] text-muted-foreground">Confira 4 números com o mototaxista antes de sair</p>
+          </div>
+          <span className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${usePin ? "bg-primary" : "bg-muted"}`}>
+            <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-background transition-all ${usePin ? "left-[18px]" : "left-0.5"}`} />
+          </span>
+        </button>
+
         <div className="flex gap-3">
           <button
             onClick={onCancel}
@@ -235,7 +253,7 @@ const RideConfirmCard = ({
             Voltar
           </button>
           <button
-            onClick={() => onConfirm(appliedCoupon ?? undefined)}
+            onClick={() => onConfirm(appliedCoupon ?? undefined, { payment, changeFor, usePin })}
             disabled={loading}
             className="flex-1 rounded-xl bg-primary py-3.5 font-display text-sm font-bold uppercase tracking-wider text-primary-foreground transition-all hover:bg-primary/90 active:scale-[0.98] disabled:opacity-50"
           >

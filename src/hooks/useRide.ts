@@ -107,9 +107,13 @@ export function useRide() {
     estimatedDistanceKm: number;
     estimatedDurationMin: number;
     estimatedPrice: number;
+    paymentMethod?: "pix" | "cash" | "card";
+    changeFor?: number | null;
+    usePin?: boolean;
   }) => {
     if (!user) return null;
     setLoading(true);
+    const pin = params.usePin ? String(Math.floor(1000 + Math.random() * 9000)) : null;
     const { data, error } = await supabase
       .from("rides")
       .insert({
@@ -123,6 +127,9 @@ export function useRide() {
         estimated_distance_km: params.estimatedDistanceKm,
         estimated_duration_min: params.estimatedDurationMin,
         estimated_price: params.estimatedPrice,
+        payment_method: params.paymentMethod ?? "pix",
+        change_for: params.paymentMethod === "cash" && params.changeFor ? params.changeFor : null,
+        pin_code: pin,
         status: "REQUESTED" as const,
       })
       .select()
