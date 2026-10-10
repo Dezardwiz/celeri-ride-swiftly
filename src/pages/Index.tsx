@@ -214,7 +214,28 @@ const Index = () => {
         driverLocation={showDriver ? liveDriverLocation : undefined}
         pickupLocation={userLocation ?? MONTES_CLAROS.center}
         dropoffLocation={dropoffCoords ?? { lat: (userLocation?.lat ?? MONTES_CLAROS.center.lat) + 0.015, lng: (userLocation?.lng ?? MONTES_CLAROS.center.lng) + 0.01 }}
+        draggablePickup={screen === "confirm"}
+        onPickupDrag={async ({ lat, lng }) => {
+          setManualOrigin({ address: "Ponto ajustado no mapa", lat, lng });
+          try {
+            const r = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&zoom=18`,
+              { headers: { "Accept-Language": "pt-BR" } }
+            );
+            const d = await r.json();
+            const a = d?.address ?? {};
+            const street = a.road ? (a.house_number ? `${a.road}, ${a.house_number}` : a.road) : d?.display_name?.split(",")[0];
+            const label = [street, a.suburb].filter(Boolean).join(" - ") || "Ponto ajustado no mapa";
+            setManualOrigin({ address: `${label} (ajustado no mapa)`, lat, lng });
+          } catch { /* keep generic label */ }
+          toast.success("Ponto de embarque ajustado");
+        }}
       />
+      {screen === "confirm" && (
+        <div className="pointer-events-none absolute left-1/2 top-16 z-30 -translate-x-1/2 rounded-full border border-primary/40 bg-card/90 px-3 py-1.5 text-xs text-foreground shadow-lg backdrop-blur">
+          Arraste o ponto dourado para ajustar o embarque
+        </div>
+      )}
 
       {isHome ? (
         <>
