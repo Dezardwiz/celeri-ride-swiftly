@@ -285,6 +285,7 @@ const Index = () => {
           <RideConfirmCard
             key="confirm"
             destination={destination}
+            origin={manualOrigin?.address}
             estimatedPrice={price}
             estimatedTime={durationMin}
             estimatedDistance={distanceKm}
