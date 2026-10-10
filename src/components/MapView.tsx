@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
-import { MONTES_CLAROS } from "@/lib/geo";
+import { MONTES_CLAROS, isWithinMontesclaros } from "@/lib/geo";
 import { fetchRoute } from "@/lib/routing";
 import "leaflet/dist/leaflet.css";
 
@@ -10,6 +10,8 @@ interface MapViewProps {
   driverLocation?: { lat: number; lng: number };
   pickupLocation?: { lat: number; lng: number };
   dropoffLocation?: { lat: number; lng: number };
+  draggablePickup?: boolean;
+  onPickupDrag?: (pos: { lat: number; lng: number }) => void;
 }
 
 const TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -57,7 +59,11 @@ const MapView = ({
   driverLocation,
   pickupLocation = MONTES_CLAROS.center,
   dropoffLocation = { lat: MONTES_CLAROS.center.lat + 0.015, lng: MONTES_CLAROS.center.lng + 0.01 },
+  draggablePickup = false,
+  onPickupDrag,
 }: MapViewProps) => {
+  const onPickupDragRef = useRef(onPickupDrag);
+  onPickupDragRef.current = onPickupDrag;
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const pickupMarkerRef = useRef<L.Marker | null>(null);
@@ -110,6 +116,24 @@ const MapView = ({
       map.flyTo([pickupLocation.lat, pickupLocation.lng], 15, { duration: 0.8, easeLinearity: 0.25 });
     }
   }, [pickupLocation.lat, pickupLocation.lng, showRoute]);
+
+  // Draggable pickup (adjust exact boarding point)
+  useEffect(() => {
+    const marker = pickupMarkerRef.current;
+    if (!marker) return;
+    if (!draggablePickup) { marker.dragging?.disable(); return; }
+    marker.dragging?.enable();
+    const onEnd = () => {
+      const p = marker.getLatLng();
+      if (!isWithinMontesclaros(p.lat, p.lng)) {
+        marker.setLatLng([pickupLocation.lat, pickupLocation.lng]);
+        return;
+      }
+      onPickupDragRef.current?.({ lat: p.lat, lng: p.lng });
+    };
+    marker.on("dragend", onEnd);
+    return () => { marker.off("dragend", onEnd); };
+  }, [draggablePickup, pickupLocation.lat, pickupLocation.lng]);
 
   // Update route & dropoff with real road directions
   useEffect(() => {
