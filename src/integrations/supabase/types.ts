@@ -317,6 +317,7 @@ export type Database = {
       }
       drivers: {
         Row: {
+          accepted_payment_methods: string[]
           created_at: string
           document: string
           id: string
@@ -336,6 +337,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          accepted_payment_methods?: string[]
           created_at?: string
           document: string
           id?: string
@@ -355,6 +357,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          accepted_payment_methods?: string[]
           created_at?: string
           document?: string
           id?: string
@@ -554,6 +557,7 @@ export type Database = {
           canceled_by: string | null
           cancellation_fee: number | null
           cancellation_reason: string | null
+          change_for: number | null
           completed_at: string | null
           coupon_code: string | null
           created_at: string
@@ -574,6 +578,8 @@ export type Database = {
           origin_lat: number | null
           origin_lng: number | null
           passenger_id: string
+          payment_method: string
+          pin_code: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["ride_status"]
           updated_at: string
@@ -584,6 +590,7 @@ export type Database = {
           canceled_by?: string | null
           cancellation_fee?: number | null
           cancellation_reason?: string | null
+          change_for?: number | null
           completed_at?: string | null
           coupon_code?: string | null
           created_at?: string
@@ -604,6 +611,8 @@ export type Database = {
           origin_lat?: number | null
           origin_lng?: number | null
           passenger_id: string
+          payment_method?: string
+          pin_code?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["ride_status"]
           updated_at?: string
@@ -614,6 +623,7 @@ export type Database = {
           canceled_by?: string | null
           cancellation_fee?: number | null
           cancellation_reason?: string | null
+          change_for?: number | null
           completed_at?: string | null
           coupon_code?: string | null
           created_at?: string
@@ -634,6 +644,8 @@ export type Database = {
           origin_lat?: number | null
           origin_lng?: number | null
           passenger_id?: string
+          payment_method?: string
+          pin_code?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["ride_status"]
           updated_at?: string
