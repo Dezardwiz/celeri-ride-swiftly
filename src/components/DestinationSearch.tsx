@@ -212,6 +212,19 @@ const DestinationSearch = ({
             />
             {loading && <Loader2 size={14} className="text-primary animate-spin flex-shrink-0" />}
           </div>
+          {query.length < 3 && (
+            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+              {["Montes Claros Shopping", "Ibituruna Center", "Praça Doutor Carlos", "Rodoviária", "Mercado Central", "Unimontes", "Funorte", "Santa Casa", "Major Prates"].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setQuery(p)}
+                  className="whitespace-nowrap rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary hover:text-primary"
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

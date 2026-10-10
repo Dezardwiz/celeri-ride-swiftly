@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 interface RideConfirmCardProps {
   destination: string;
+  origin?: string;
   estimatedPrice: number;
   estimatedTime: number;
   estimatedDistance: number;
@@ -18,6 +19,7 @@ interface RideConfirmCardProps {
 
 const RideConfirmCard = ({
   destination,
+  origin,
   estimatedPrice,
   estimatedTime,
   estimatedDistance,
@@ -93,7 +95,7 @@ const RideConfirmCard = ({
           <div className="min-w-0 flex-1 space-y-3">
             <div>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Embarque</p>
-              <p className="truncate text-sm text-foreground">Sua localização atual</p>
+              <p className="truncate text-sm text-foreground">{origin || "Sua localização atual (GPS)"}</p>
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Destino</p>
