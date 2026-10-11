@@ -334,6 +334,7 @@ const Index = () => {
             driver={assignedDriver}
             etaMin={etaToPickup}
             rideId={ride.currentRide?.id}
+            pinCode={ride.currentRide?.pin_code}
           />
         )}
         {screen === "complete" && (

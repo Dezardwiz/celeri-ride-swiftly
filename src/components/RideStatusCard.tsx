@@ -18,9 +18,10 @@ interface RideStatusCardProps {
   driver?: DriverInfo | null;
   etaMin?: number | null;
   rideId?: string;
+  pinCode?: string | null;
 }
 
-const RideStatusCard = ({ status, onAdvance, onComplete, onCancel, driver, etaMin, rideId }: RideStatusCardProps) => {
+const RideStatusCard = ({ status, onAdvance, onComplete, onCancel, driver, etaMin, rideId, pinCode }: RideStatusCardProps) => {
   const [chatOpen, setChatOpen] = useState(false);
   const { unreadCount } = useRideChat(rideId ?? null, "passenger");
   const prevStatus = useRef<RideStatus | null>(null);
@@ -147,6 +148,18 @@ const RideStatusCard = ({ status, onAdvance, onComplete, onCancel, driver, etaMi
             </div>
           </div>
 
+          <div className="flex gap-1">
+            {(["accepted", "arrived", "in_progress", "done"] as const).map((s, i) => {
+              const idx = { accepted: 0, arriving: 0, arrived: 1, in_progress: 2 }[status];
+              return <div key={s} className={`h-1 flex-1 rounded-full ${i <= idx ? "bg-primary" : "bg-muted"}`} />;
+            })}
+          </div>
+          {pinCode && status !== "in_progress" && (
+            <div className="flex items-center justify-between rounded-md border border-primary/40 bg-primary/10 px-3 py-2">
+              <span className="text-xs text-muted-foreground">Informe ao mototaxista</span>
+              <span className="font-display text-xl tracking-[0.35em] text-primary">{pinCode}</span>
+            </div>
+          )}
           <div className="flex items-center gap-2 rounded-md bg-input px-3 py-2">
             <Navigation size={12} className="text-muted-foreground" />
             <span className="text-xs text-muted-foreground">{driver?.moto_model ?? "—"}</span>
