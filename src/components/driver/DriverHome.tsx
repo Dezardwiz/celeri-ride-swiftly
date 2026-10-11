@@ -196,6 +196,8 @@ const DriverHome = () => {
         />
       </motion.button>
 
+      <PaymentPrefs driverId={driver.id} initial={(driver as any).accepted_payment_methods ?? ["cash", "pix", "card"]} />
+
       {/* Rest mode button (only when online) */}
       {isOnline && (
         <motion.button
@@ -293,6 +295,10 @@ const DriverHome = () => {
                     <Clock size={12} />
                     {ride.estimated_duration_min} min
                   </div>
+                  <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-display uppercase text-primary">
+                    {({ pix: "PIX", cash: "Dinheiro", card: "Cartão" } as Record<string, string>)[ride.payment_method] ?? "PIX"}
+                    {ride.payment_method === "cash" && ride.change_for ? ` · troco R$${Number(ride.change_for).toFixed(0)}` : ""}
+                  </span>
                   <div className="ml-auto flex items-center gap-1 font-display text-sm text-primary">
                     <DollarSign size={14} />
                     R$ {gross.toFixed(2)}
