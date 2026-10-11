@@ -134,11 +134,31 @@ const DriverRideNavigation = ({ ride, onAdvance, onComplete, onCancel }: Props) 
     });
   }, [driverPos?.lat, driverPos?.lng, ride.status]);
 
+  const [pinOpen, setPinOpen] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [pinError, setPinError] = useState(false);
+  const steps = ["ACCEPTED", "ARRIVED", "IN_PROGRESS", "COMPLETED"];
+  const stepIdx = Math.max(0, steps.indexOf(ride.status === "ARRIVING" ? "ACCEPTED" : ride.status));
+  const payLabel = { pix: "PIX", cash: "Dinheiro", card: "Cartão" }[ride.payment_method as "pix" | "cash" | "card"] ?? "PIX";
+
   const handleAction = () => {
     if (ride.status === "IN_PROGRESS") {
       onComplete();
+    } else if (ride.status === "ARRIVED" && ride.pin_code) {
+      setPinInput("");
+      setPinError(false);
+      setPinOpen(true);
     } else {
       onAdvance();
+    }
+  };
+
+  const confirmPin = () => {
+    if (pinInput === ride.pin_code) {
+      setPinOpen(false);
+      onAdvance();
+    } else {
+      setPinError(true);
     }
   };
 
@@ -170,6 +190,20 @@ const DriverRideNavigation = ({ ride, onAdvance, onComplete, onCancel }: Props) 
 
       {/* Bottom panel */}
       <div className="border-t border-border bg-background p-4 space-y-3">
+        <div className="flex gap-1">
+          {steps.map((s, i) => (
+            <div key={s} className={`h-1 flex-1 rounded-full ${i <= stepIdx ? "bg-primary" : "bg-muted"}`} />
+          ))}
+        </div>
+        <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
+          <span className="font-display uppercase tracking-wider text-primary">Pagamento: {payLabel}</span>
+          {ride.payment_method === "cash" && (
+            <span className="text-foreground">
+              {ride.change_for ? `Troco para R$ ${Number(ride.change_for).toFixed(2)}` : "Sem troco"}
+            </span>
+          )}
+          {ride.pin_code && <span className="text-foreground">PIN exigido</span>}
+        </div>
         {/* External navigation */}
         <div className="flex gap-2">
           <button
@@ -236,6 +270,28 @@ const DriverRideNavigation = ({ ride, onAdvance, onComplete, onCancel }: Props) 
           </motion.button>
         </div>
       </div>
+
+      {pinOpen && (
+        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-background/80 p-6 backdrop-blur-sm">
+          <div className="w-full max-w-xs space-y-3 rounded-2xl border border-border bg-card p-5">
+            <p className="font-display text-sm uppercase tracking-wider text-foreground">Código do passageiro</p>
+            <p className="text-xs text-muted-foreground">Peça os 4 números que aparecem no app do passageiro.</p>
+            <input
+              autoFocus
+              inputMode="numeric"
+              maxLength={4}
+              value={pinInput}
+              onChange={(e) => { setPinInput(e.target.value.replace(/\D/g, "")); setPinError(false); }}
+              className="w-full rounded-lg border border-border bg-input py-3 text-center font-display text-2xl tracking-[0.5em] text-foreground"
+            />
+            {pinError && <p className="text-xs text-destructive">Código incorreto</p>}
+            <div className="flex gap-2">
+              <button onClick={() => setPinOpen(false)} className="flex-1 rounded-lg border border-border py-2.5 text-xs uppercase text-muted-foreground">Voltar</button>
+              <button onClick={confirmPin} disabled={pinInput.length !== 4} className="flex-1 rounded-lg bg-primary py-2.5 text-xs font-bold uppercase text-primary-foreground disabled:opacity-50">Iniciar</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <RideChatSheet
         open={chatOpen}
