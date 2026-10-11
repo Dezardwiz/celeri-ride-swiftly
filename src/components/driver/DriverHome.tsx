@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import PaymentPrefs from "@/components/driver/PaymentPrefs";
 import { motion, AnimatePresence } from "framer-motion";
 import { Power, MapPin, Navigation, Clock, DollarSign, Loader2, BellRing, Coffee, Percent, X } from "lucide-react";
 import { useDriver, useIncomingRides, useDriverLocation } from "@/hooks/useDriver";
