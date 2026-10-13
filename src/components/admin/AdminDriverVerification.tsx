@@ -4,7 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Check, X, Loader2, Eye, User } from "lucide-react";
+import { Check, X, Eye, User, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+const QUICK_REASONS = ["Foto ilegível", "CNH vencida", "Documento cortado", "CRLV desatualizado", "Dados não conferem"];
 import { toast } from "sonner";
 import { REQUIRED_DOCS, type DriverDocType } from "@/hooks/useDriverDocuments";
 
@@ -188,21 +191,13 @@ export const AdminDriverVerification = () => {
                             </div>
                             {doc && (
                               <div className="flex gap-1 shrink-0">
-                                <Button size="icon" variant="ghost" onClick={() => viewDoc(doc.file_path)} title="Ver">
+                                <Button size="icon" variant="ghost" onClick={() => viewDoc(doc)} title="Ver">
                                   <Eye className="h-4 w-4" />
                                 </Button>
                                 <Button size="icon" variant="ghost" onClick={() => reviewDoc(doc, "approved")} title="Aprovar">
-                                  <Check className="h-4 w-4 text-green-600" />
+                                  <Check className="h-4 w-4 text-primary" />
                                 </Button>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  title="Rejeitar"
-                                  onClick={() => {
-                                    const reason = window.prompt("Motivo da rejeição:", "Documento ilegível");
-                                    if (reason !== null) reviewDoc(doc, "rejected", reason);
-                                  }}
-                                >
+                                <Button size="icon" variant="ghost" title="Rejeitar" onClick={() => viewDoc(doc)}>
                                   <X className="h-4 w-4 text-destructive" />
                                 </Button>
                               </div>
