@@ -43,10 +43,20 @@ export const AdminMap = () => {
     setLoading(false);
   };
 
+  const [filter, setFilter] = useState<"all" | "available" | "on_ride" | "rides">("all");
+  const fitted = useRef(false);
+
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 15000);
-    return () => clearInterval(interval);
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const refresh = () => { if (t) clearTimeout(t); t = setTimeout(fetchData, 500); };
+    const ch = supabase
+      .channel("admin-map")
+      .on("postgres_changes", { event: "*", schema: "public", table: "drivers" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "rides" }, refresh)
+      .subscribe();
+    const interval = setInterval(fetchData, 60000);
+    return () => { clearInterval(interval); if (t) clearTimeout(t); supabase.removeChannel(ch); };
   }, []);
 
   useEffect(() => {
@@ -88,18 +98,24 @@ export const AdminMap = () => {
 
     const bounds: L.LatLng[] = [];
 
+    const showDrivers = filter !== "rides";
+    const showRides = filter === "all" || filter === "rides";
+
     drivers.forEach((d) => {
+      if (!showDrivers) return;
+      if (filter !== "all" && d.status !== filter) return;
       if (d.location_lat && d.location_lng) {
         const pos = L.latLng(d.location_lat, d.location_lng);
         bounds.push(pos);
+        const label = d.status === "available" ? "Disponível" : d.status === "on_ride" ? "Em corrida" : "Offline";
         L.marker(pos, { icon: driverIcon(d.status) })
           .addTo(map)
-          .bindPopup(`<b>${d.moto_model}</b><br>${d.plate}<br>Status: ${d.status}`);
+          .bindPopup(`<b>${d.moto_model}</b><br>Placa: ${d.plate}<br>Status: ${label}`);
       }
     });
 
-    // Add ride markers
     rides.forEach((r) => {
+      if (!showRides) return;
       if (r.origin_lat && r.origin_lng) {
         const pos = L.latLng(r.origin_lat, r.origin_lng);
         bounds.push(pos);
@@ -109,10 +125,11 @@ export const AdminMap = () => {
       }
     });
 
-    if (bounds.length > 0) {
+    if (bounds.length > 0 && !fitted.current) {
+      fitted.current = true;
       map.fitBounds(L.latLngBounds(bounds), { padding: [30, 30], maxZoom: 15 });
     }
-  }, [drivers, rides, loading]);
+  }, [drivers, rides, loading, filter]);
 
   useEffect(() => {
     return () => {
@@ -125,24 +142,32 @@ export const AdminMap = () => {
 
   const onlineDrivers = drivers.filter((d) => d.status === "available");
   const onRideDrivers = drivers.filter((d) => d.status === "on_ride");
+  const filters = [
+    { k: "all", l: "Todos" },
+    { k: "available", l: `Disponíveis (${onlineDrivers.length})` },
+    { k: "on_ride", l: `Em corrida (${onRideDrivers.length})` },
+    { k: "rides", l: `Corridas (${rides.length})` },
+  ] as const;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Mapa em Tempo Real</h2>
+        <h2 className="flex items-center gap-2 text-lg font-semibold">
+          Mapa ao Vivo <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+        </h2>
         <button onClick={fetchData} className="text-xs text-primary hover:underline">Atualizar</button>
       </div>
 
-      <div className="flex gap-2 flex-wrap">
-        <Badge variant="outline" className="text-xs gap-1">
-          <span className="w-2 h-2 rounded-full bg-green-500 inline-block" /> {onlineDrivers.length} Online
-        </Badge>
-        <Badge variant="outline" className="text-xs gap-1">
-          <span className="w-2 h-2 rounded-full bg-yellow-500 inline-block" /> {onRideDrivers.length} Em corrida
-        </Badge>
-        <Badge variant="outline" className="text-xs gap-1">
-          <span className="w-2 h-2 rounded-full bg-primary inline-block" /> {rides.length} Corridas ativas
-        </Badge>
+      <div className="flex flex-wrap gap-2">
+        {filters.map((f) => (
+          <button
+            key={f.k}
+            onClick={() => setFilter(f.k)}
+            className={`rounded-full border px-3 py-1 text-xs transition-colors ${filter === f.k ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground"}`}
+          >
+            {f.l}
+          </button>
+        ))}
       </div>
 
       <Card className="bg-card border-border overflow-hidden">

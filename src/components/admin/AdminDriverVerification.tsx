@@ -4,7 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Check, X, Loader2, Eye, User } from "lucide-react";
+import { Check, X, Eye, User, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+const QUICK_REASONS = ["Foto ilegível", "CNH vencida", "Documento cortado", "CRLV desatualizado", "Dados não conferem"];
 import { toast } from "sonner";
 import { REQUIRED_DOCS, type DriverDocType } from "@/hooks/useDriverDocuments";
 
@@ -37,6 +40,9 @@ export const AdminDriverVerification = () => {
   const [docsByDriver, setDocsByDriver] = useState<Record<string, DocRow[]>>({});
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [reasons, setReasons] = useState<Record<string, string>>({});
+  const [preview, setPreview] = useState<{ doc: DocRow; url: string } | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [rotate, setRotate] = useState(0);
 
   const fetchDrivers = async () => {
     setLoading(true);
@@ -73,18 +79,16 @@ export const AdminDriverVerification = () => {
     }
   };
 
-  const viewDoc = async (path: string) => {
-    if (signedUrls[path]) {
-      window.open(signedUrls[path], "_blank");
-      return;
+  const viewDoc = async (doc: DocRow) => {
+    let url = signedUrls[doc.file_path];
+    if (!url) {
+      const { data } = await supabase.storage.from("driver-documents").createSignedUrl(doc.file_path, 60 * 10);
+      if (!data?.signedUrl) { toast.error("Não foi possível abrir o documento"); return; }
+      url = data.signedUrl;
+      setSignedUrls((s) => ({ ...s, [doc.file_path]: url }));
     }
-    const { data } = await supabase.storage
-      .from("driver-documents")
-      .createSignedUrl(path, 60 * 10);
-    if (data?.signedUrl) {
-      setSignedUrls((s) => ({ ...s, [path]: data.signedUrl }));
-      window.open(data.signedUrl, "_blank");
-    }
+    setZoom(1); setRotate(0);
+    setPreview({ doc, url });
   };
 
   const reviewDoc = async (doc: DocRow, status: "approved" | "rejected", reason?: string) => {
@@ -187,21 +191,13 @@ export const AdminDriverVerification = () => {
                             </div>
                             {doc && (
                               <div className="flex gap-1 shrink-0">
-                                <Button size="icon" variant="ghost" onClick={() => viewDoc(doc.file_path)} title="Ver">
+                                <Button size="icon" variant="ghost" onClick={() => viewDoc(doc)} title="Ver">
                                   <Eye className="h-4 w-4" />
                                 </Button>
                                 <Button size="icon" variant="ghost" onClick={() => reviewDoc(doc, "approved")} title="Aprovar">
-                                  <Check className="h-4 w-4 text-green-600" />
+                                  <Check className="h-4 w-4 text-primary" />
                                 </Button>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  title="Rejeitar"
-                                  onClick={() => {
-                                    const reason = window.prompt("Motivo da rejeição:", "Documento ilegível");
-                                    if (reason !== null) reviewDoc(doc, "rejected", reason);
-                                  }}
-                                >
+                                <Button size="icon" variant="ghost" title="Rejeitar" onClick={() => viewDoc(doc)}>
                                   <X className="h-4 w-4 text-destructive" />
                                 </Button>
                               </div>
@@ -239,6 +235,46 @@ export const AdminDriverVerification = () => {
           })}
         </div>
       )}
+
+      <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{REQUIRED_DOCS.find((r) => r.type === preview?.doc.type)?.label ?? "Documento"}</DialogTitle>
+          </DialogHeader>
+          {preview && (
+            <div className="space-y-3">
+              <div className="flex h-[55vh] items-center justify-center overflow-auto rounded-md bg-muted">
+                {/\.pdf(\?|$)/i.test(preview.doc.file_path) ? (
+                  <iframe src={preview.url} className="h-full w-full" title="Documento" />
+                ) : (
+                  <img
+                    src={preview.url}
+                    alt="Documento"
+                    style={{ transform: `scale(${zoom}) rotate(${rotate}deg)` }}
+                    className="max-h-full max-w-full object-contain transition-transform"
+                  />
+                )}
+              </div>
+              <div className="flex justify-center gap-2">
+                <Button size="icon" variant="outline" onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))}><ZoomOut className="h-4 w-4" /></Button>
+                <Button size="icon" variant="outline" onClick={() => setZoom((z) => Math.min(3, z + 0.25))}><ZoomIn className="h-4 w-4" /></Button>
+                <Button size="icon" variant="outline" onClick={() => setRotate((r) => (r + 90) % 360)}><RotateCw className="h-4 w-4" /></Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {QUICK_REASONS.map((r) => (
+                  <Button key={r} size="sm" variant="outline" className="border-destructive/40 text-destructive"
+                    onClick={() => { reviewDoc(preview.doc, "rejected", r); setPreview(null); }}>
+                    {r}
+                  </Button>
+                ))}
+              </div>
+              <Button className="w-full" onClick={() => { reviewDoc(preview.doc, "approved"); setPreview(null); }}>
+                <Check className="mr-1 h-4 w-4" /> Aprovar documento
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

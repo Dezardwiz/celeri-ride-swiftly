@@ -14,6 +14,8 @@ import { AdminCommission } from "@/components/admin/AdminCommission";
 import { AdminCancellations } from "@/components/admin/AdminCancellations";
 import { AdminDriverVerification } from "@/components/admin/AdminDriverVerification";
 import { AdminSurge } from "@/components/admin/AdminSurge";
+import { AdminSos } from "@/components/admin/AdminSos";
+import { ShieldAlert } from "lucide-react";
 import { Shield, Users, Car, DollarSign, BarChart3, LogOut, UserCheck, Wallet, MapPin, Percent, Ban, BadgeCheck, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import geleriLogo from "@/assets/geleri-logo.jpeg";
@@ -62,7 +64,7 @@ const Admin = () => {
 
       <div className="p-4 max-w-6xl mx-auto">
         <Tabs defaultValue="drivers" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-11 bg-card overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-12 bg-card overflow-x-auto">
             <TabsTrigger value="drivers" className="flex items-center gap-1 text-xs">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Motoristas</span>
@@ -107,9 +109,14 @@ const Admin = () => {
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Relatórios</span>
             </TabsTrigger>
+            <TabsTrigger value="sos" className="flex items-center gap-1 text-xs">
+              <ShieldAlert className="h-4 w-4 text-destructive" />
+              <span className="hidden sm:inline">SOS</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="drivers"><AdminDrivers /></TabsContent>
+          <TabsContent value="sos"><AdminSos /></TabsContent>
           <TabsContent value="verification"><AdminDriverVerification /></TabsContent>
           <TabsContent value="passengers"><AdminPassengers /></TabsContent>
           <TabsContent value="rides"><AdminRides /></TabsContent>
