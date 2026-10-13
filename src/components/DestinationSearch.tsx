@@ -64,8 +64,15 @@ const DestinationSearch = ({
   originLabel,
   onSelectOrigin,
 }: DestinationSearchProps) => {
-  const [query, setQuery] = useState("");
-  const [field, setField] = useState<"origin" | "destination">("destination");
+  const [field, setField] = useState<"origin" | "destination">(
+    onSelectOrigin && !userLocation && !originLabel ? "origin" : "destination"
+  );
+  const [originQuery, setOriginQuery] = useState("");
+  const [destQuery, setDestQuery] = useState("");
+  const query = field === "origin" ? originQuery : destQuery;
+  const setQuery = (v: string) => (field === "origin" ? setOriginQuery(v) : setDestQuery(v));
+  const destRef = useRef<HTMLInputElement>(null);
+  const originRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<LocationResult | null>(null);
   const [houseNumber, setHouseNumber] = useState("");
   const typedNumber = splitNumber(query).number;
@@ -76,8 +83,9 @@ const DestinationSearch = ({
     if (field === "origin" && onSelectOrigin) {
       onSelectOrigin(full, { lat: loc.lat, lng: loc.lng });
       setField("destination");
-      setQuery("");
+      setOriginQuery("");
       setPending(null);
+      setTimeout(() => destRef.current?.focus(), 50);
       return;
     }
     onSelect(full, { lat: loc.lat, lng: loc.lng });
@@ -182,36 +190,47 @@ const DestinationSearch = ({
         </div>
 
         <div className="space-y-2">
-          <button
-            onClick={() => { if (onSelectOrigin) { setField(field === "origin" ? "destination" : "origin"); setQuery(""); } }}
-            className={`flex w-full items-center gap-3 rounded-md bg-input p-3 text-left ${field === "origin" ? "ring-1 ring-primary" : ""}`}
-          >
-            <Navigation size={14} className="text-primary flex-shrink-0" />
-            <span className="flex-1 truncate text-sm text-muted-foreground">
-              {field === "origin" ? "Digite onde você está (rua e número)" : originLabel || "Sua localização"}
-            </span>
-            {onSelectOrigin && <span className="text-[11px] font-medium uppercase text-primary">{field === "origin" ? "Cancelar" : "Alterar"}</span>}
-          </button>
-          {field === "origin" && onSelectOrigin && originLabel && (
+          <div className="relative space-y-2">
+            {onSelectOrigin && <div className="absolute left-[18px] top-9 bottom-9 w-px bg-border" />}
+            <div className={`flex items-center gap-3 rounded-md bg-input p-3 ${field === "origin" ? "ring-1 ring-primary" : ""}`}>
+              <Navigation size={14} className="text-primary flex-shrink-0" />
+              {onSelectOrigin ? (
+                <input
+                  ref={originRef}
+                  autoFocus={field === "origin"}
+                  value={field === "origin" ? originQuery : originLabel || "Sua localização"}
+                  onFocus={() => { if (field !== "origin") { setField("origin"); setOriginQuery(""); } }}
+                  onChange={(e) => setOriginQuery(e.target.value)}
+                  placeholder={originLabel ? "Ex: Rua Bocaiúva 450" : "GPS não localizou — digite rua e número"}
+                  className="flex-1 min-w-0 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                />
+              ) : (
+                <span className="flex-1 truncate text-sm text-muted-foreground">{originLabel || "Sua localização"}</span>
+              )}
+              {field === "origin" && loading && <Loader2 size={14} className="text-primary animate-spin flex-shrink-0" />}
+            </div>
+            <div className={`flex items-center gap-3 rounded-md bg-input p-3 ${field === "destination" ? "ring-1 ring-primary" : ""}`}>
+              <Search size={14} className="text-primary flex-shrink-0" />
+              <input
+                ref={destRef}
+                autoFocus={field === "destination"}
+                value={destQuery}
+                onFocus={() => setField("destination")}
+                onChange={(e) => setDestQuery(e.target.value)}
+                placeholder="Para onde? Ex: Rua Tupis 450"
+                className="flex-1 min-w-0 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+              />
+              {field === "destination" && loading && <Loader2 size={14} className="text-primary animate-spin flex-shrink-0" />}
+            </div>
+          </div>
+          {field === "origin" && onSelectOrigin && (
             <button
-              onClick={() => { onSelectOrigin(null, null); setField("destination"); }}
-              className="text-xs text-primary underline"
+              onClick={() => { onSelectOrigin(null, null); setField("destination"); setOriginQuery(""); setTimeout(() => destRef.current?.focus(), 50); }}
+              className="flex items-center gap-1 text-xs text-primary underline"
             >
-              Usar minha localização (GPS)
+              <Navigation size={12} /> {originLabel ? "Usar minha localização (GPS)" : "Tentar GPS novamente"}
             </button>
           )}
-          <div className="flex items-center gap-3 rounded-md bg-input p-3 ring-1 ring-primary">
-            <Search size={14} className="text-primary flex-shrink-0" />
-            <input
-              autoFocus
-              key={field}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={field === "origin" ? "Ex: Rua Bocaiúva 450" : "Para onde? Ex: Rua Tupis 450"}
-              className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
-            />
-            {loading && <Loader2 size={14} className="text-primary animate-spin flex-shrink-0" />}
-          </div>
           {query.length < 3 && (
             <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
               {["Montes Claros Shopping", "Ibituruna Center", "Praça Doutor Carlos", "Rodoviária", "Mercado Central", "Unimontes", "Funorte", "Santa Casa", "Major Prates"].map((p) => (
