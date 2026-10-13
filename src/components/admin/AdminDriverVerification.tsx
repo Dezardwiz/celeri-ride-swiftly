@@ -37,6 +37,9 @@ export const AdminDriverVerification = () => {
   const [docsByDriver, setDocsByDriver] = useState<Record<string, DocRow[]>>({});
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [reasons, setReasons] = useState<Record<string, string>>({});
+  const [preview, setPreview] = useState<{ doc: DocRow; url: string } | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [rotate, setRotate] = useState(0);
 
   const fetchDrivers = async () => {
     setLoading(true);
@@ -73,18 +76,16 @@ export const AdminDriverVerification = () => {
     }
   };
 
-  const viewDoc = async (path: string) => {
-    if (signedUrls[path]) {
-      window.open(signedUrls[path], "_blank");
-      return;
+  const viewDoc = async (doc: DocRow) => {
+    let url = signedUrls[doc.file_path];
+    if (!url) {
+      const { data } = await supabase.storage.from("driver-documents").createSignedUrl(doc.file_path, 60 * 10);
+      if (!data?.signedUrl) { toast.error("Não foi possível abrir o documento"); return; }
+      url = data.signedUrl;
+      setSignedUrls((s) => ({ ...s, [doc.file_path]: url }));
     }
-    const { data } = await supabase.storage
-      .from("driver-documents")
-      .createSignedUrl(path, 60 * 10);
-    if (data?.signedUrl) {
-      setSignedUrls((s) => ({ ...s, [path]: data.signedUrl }));
-      window.open(data.signedUrl, "_blank");
-    }
+    setZoom(1); setRotate(0);
+    setPreview({ doc, url });
   };
 
   const reviewDoc = async (doc: DocRow, status: "approved" | "rejected", reason?: string) => {
