@@ -43,10 +43,20 @@ export const AdminMap = () => {
     setLoading(false);
   };
 
+  const [filter, setFilter] = useState<"all" | "available" | "on_ride" | "rides">("all");
+  const fitted = useRef(false);
+
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 15000);
-    return () => clearInterval(interval);
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const refresh = () => { if (t) clearTimeout(t); t = setTimeout(fetchData, 500); };
+    const ch = supabase
+      .channel("admin-map")
+      .on("postgres_changes", { event: "*", schema: "public", table: "drivers" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "rides" }, refresh)
+      .subscribe();
+    const interval = setInterval(fetchData, 60000);
+    return () => { clearInterval(interval); if (t) clearTimeout(t); supabase.removeChannel(ch); };
   }, []);
 
   useEffect(() => {
