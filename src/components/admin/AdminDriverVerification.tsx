@@ -235,6 +235,46 @@ export const AdminDriverVerification = () => {
           })}
         </div>
       )}
+
+      <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{REQUIRED_DOCS.find((r) => r.type === preview?.doc.type)?.label ?? "Documento"}</DialogTitle>
+          </DialogHeader>
+          {preview && (
+            <div className="space-y-3">
+              <div className="flex h-[55vh] items-center justify-center overflow-auto rounded-md bg-muted">
+                {/\.pdf(\?|$)/i.test(preview.doc.file_path) ? (
+                  <iframe src={preview.url} className="h-full w-full" title="Documento" />
+                ) : (
+                  <img
+                    src={preview.url}
+                    alt="Documento"
+                    style={{ transform: `scale(${zoom}) rotate(${rotate}deg)` }}
+                    className="max-h-full max-w-full object-contain transition-transform"
+                  />
+                )}
+              </div>
+              <div className="flex justify-center gap-2">
+                <Button size="icon" variant="outline" onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))}><ZoomOut className="h-4 w-4" /></Button>
+                <Button size="icon" variant="outline" onClick={() => setZoom((z) => Math.min(3, z + 0.25))}><ZoomIn className="h-4 w-4" /></Button>
+                <Button size="icon" variant="outline" onClick={() => setRotate((r) => (r + 90) % 360)}><RotateCw className="h-4 w-4" /></Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {QUICK_REASONS.map((r) => (
+                  <Button key={r} size="sm" variant="outline" className="border-destructive/40 text-destructive"
+                    onClick={() => { reviewDoc(preview.doc, "rejected", r); setPreview(null); }}>
+                    {r}
+                  </Button>
+                ))}
+              </div>
+              <Button className="w-full" onClick={() => { reviewDoc(preview.doc, "approved"); setPreview(null); }}>
+                <Check className="mr-1 h-4 w-4" /> Aprovar documento
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

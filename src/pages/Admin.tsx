@@ -14,6 +14,8 @@ import { AdminCommission } from "@/components/admin/AdminCommission";
 import { AdminCancellations } from "@/components/admin/AdminCancellations";
 import { AdminDriverVerification } from "@/components/admin/AdminDriverVerification";
 import { AdminSurge } from "@/components/admin/AdminSurge";
+import { AdminSos } from "@/components/admin/AdminSos";
+import { ShieldAlert } from "lucide-react";
 import { Shield, Users, Car, DollarSign, BarChart3, LogOut, UserCheck, Wallet, MapPin, Percent, Ban, BadgeCheck, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import geleriLogo from "@/assets/geleri-logo.jpeg";
@@ -107,9 +109,14 @@ const Admin = () => {
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Relatórios</span>
             </TabsTrigger>
+            <TabsTrigger value="sos" className="flex items-center gap-1 text-xs">
+              <ShieldAlert className="h-4 w-4 text-destructive" />
+              <span className="hidden sm:inline">SOS</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="drivers"><AdminDrivers /></TabsContent>
+          <TabsContent value="sos"><AdminSos /></TabsContent>
           <TabsContent value="verification"><AdminDriverVerification /></TabsContent>
           <TabsContent value="passengers"><AdminPassengers /></TabsContent>
           <TabsContent value="rides"><AdminRides /></TabsContent>
