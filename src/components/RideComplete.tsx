@@ -8,7 +8,7 @@ interface RideCompleteProps {
   price: number;
   distanceKm: number;
   durationMin: number;
-  onSubmit: (payment: "pix" | "card" | "cash" | "wallet", rating: number, comment?: string) => void;
+  onSubmit: (payment: "pix" | "card" | "cash" | "wallet", rating: number, comment?: string, tags?: string[]) => void;
   onClose: () => void;
 }
 
@@ -35,8 +35,7 @@ const RideComplete = ({ price, distanceKm, durationMin, onSubmit, onClose }: Rid
   ];
 
   const handleSubmit = () => {
-    const full = [tags.join(", "), comment.trim()].filter(Boolean).join(" — ");
-    onSubmit(paymentMethod, rating, full || undefined);
+    onSubmit(paymentMethod, rating, comment.trim() || undefined, tags);
     setSubmitted(true);
     playSound("complete");
     setTimeout(onClose, 1500);

@@ -226,15 +226,19 @@ export function useRide() {
     });
   };
 
-  const saveRating = async (score: number, comment?: string) => {
+  const saveRating = async (score: number, comment?: string, tags?: string[]) => {
     if (!currentRide || !user || !currentRide.driver_id) return;
-    await supabase.from("ratings").insert({
+    const { data: drv } = await supabase.from("drivers").select("user_id").eq("id", currentRide.driver_id).maybeSingle();
+    if (!drv?.user_id) return;
+    const { error } = await supabase.from("ratings").insert({
       ride_id: currentRide.id,
       from_user_id: user.id,
-      to_user_id: currentRide.driver_id,
+      to_user_id: drv.user_id,
       score,
       comment: comment ?? null,
+      tags: tags ?? [],
     });
+    if (error) console.error("saveRating", error);
   };
 
   const resetRide = () => setCurrentRide(null);
