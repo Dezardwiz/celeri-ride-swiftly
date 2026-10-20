@@ -325,10 +325,12 @@ export type Database = {
           location_lat: number | null
           location_lng: number | null
           moto_model: string
+          needs_review: boolean
           onboarding_status: Database["public"]["Enums"]["driver_onboarding_status"]
           photo_url: string | null
           plate: string
           rating_avg: number | null
+          ratings_count: number
           rejection_reason: string | null
           rest_until: string | null
           status: Database["public"]["Enums"]["driver_status"]
@@ -345,10 +347,12 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           moto_model: string
+          needs_review?: boolean
           onboarding_status?: Database["public"]["Enums"]["driver_onboarding_status"]
           photo_url?: string | null
           plate: string
           rating_avg?: number | null
+          ratings_count?: number
           rejection_reason?: string | null
           rest_until?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
@@ -365,10 +369,12 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           moto_model?: string
+          needs_review?: boolean
           onboarding_status?: Database["public"]["Enums"]["driver_onboarding_status"]
           photo_url?: string | null
           plate?: string
           rating_avg?: number | null
+          ratings_count?: number
           rejection_reason?: string | null
           rest_until?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
@@ -423,6 +429,8 @@ export type Database = {
           first_ride_bonus_paid: boolean
           full_name: string | null
           id: string
+          passenger_rating_avg: number | null
+          passenger_ratings_count: number
           phone: string | null
           referral_code: string | null
           referred_by: string | null
@@ -435,6 +443,8 @@ export type Database = {
           first_ride_bonus_paid?: boolean
           full_name?: string | null
           id?: string
+          passenger_rating_avg?: number | null
+          passenger_ratings_count?: number
           phone?: string | null
           referral_code?: string | null
           referred_by?: string | null
@@ -447,6 +457,8 @@ export type Database = {
           first_ride_bonus_paid?: boolean
           full_name?: string | null
           id?: string
+          passenger_rating_avg?: number | null
+          passenger_ratings_count?: number
           phone?: string | null
           referral_code?: string | null
           referred_by?: string | null
@@ -488,8 +500,10 @@ export type Database = {
           created_at: string
           from_user_id: string
           id: string
+          rater_role: string | null
           ride_id: string
           score: number
+          tags: string[]
           to_user_id: string
         }
         Insert: {
@@ -497,8 +511,10 @@ export type Database = {
           created_at?: string
           from_user_id: string
           id?: string
+          rater_role?: string | null
           ride_id: string
           score: number
+          tags?: string[]
           to_user_id: string
         }
         Update: {
@@ -506,8 +522,10 @@ export type Database = {
           created_at?: string
           from_user_id?: string
           id?: string
+          rater_role?: string | null
           ride_id?: string
           score?: number
+          tags?: string[]
           to_user_id?: string
         }
         Relationships: [
