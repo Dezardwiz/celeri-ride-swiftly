@@ -71,9 +71,12 @@ export const AdminDrivers = () => {
                         <Badge variant="outline" className="text-xs">
                           {d.status}
                         </Badge>
+                        {(d as any).needs_review && (
+                          <Badge variant="destructive" className="text-xs">Nota baixa — revisar</Badge>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        ⭐ {d.rating_avg?.toFixed(1) || "0.0"} • {d.total_rides || 0} corridas
+                        ⭐ {Number(d.rating_avg ?? 0).toFixed(1)} ({(d as any).ratings_count ?? 0} avaliações) • {d.total_rides || 0} corridas
                       </p>
                     </div>
                   </div>
