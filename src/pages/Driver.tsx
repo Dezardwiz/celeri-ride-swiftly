@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import geleriLogo from "@/assets/geleri-logo.jpeg";
 import CancellationDialog from "@/components/CancellationDialog";
 import { useCancellationSettings, estimateCancellationFee, cancelRideRpc } from "@/hooks/useCancellation";
+import RatePassengerSheet from "@/components/driver/RatePassengerSheet";
 
 const Driver = () => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const Driver = () => {
   const settings = useCancellationSettings();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [canceling, setCanceling] = useState(false);
+  const [toRate, setToRate] = useState<{ rideId: string; passengerId: string } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -45,8 +47,10 @@ const Driver = () => {
   };
 
   const handleComplete = async () => {
+    const r = activeRide;
     await completeRide();
     toast.success("Corrida finalizada!");
+    if (r) setToRate({ rideId: r.id, passengerId: r.passenger_id });
   };
 
   const handleCancel = () => setCancelOpen(true);
@@ -90,6 +94,17 @@ const Driver = () => {
             onAdvance={handleAdvance}
             onComplete={handleComplete}
             onCancel={handleCancel}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {toRate && (
+          <RatePassengerSheet
+            key="rate-pax"
+            rideId={toRate.rideId}
+            passengerId={toRate.passengerId}
+            onClose={() => setToRate(null)}
           />
         )}
       </AnimatePresence>
