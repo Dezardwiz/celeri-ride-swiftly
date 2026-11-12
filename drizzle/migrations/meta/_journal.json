@@ -29,6 +29,20 @@
       "when": 1792530998531,
       "tag": "0003_ratings_reputation",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794517013055,
+      "tag": "0004_cash_payment_fix",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794517048384,
+      "tag": "0005_cash_payout_status_fix",
+      "breakpoints": true
     }
   ]
 }

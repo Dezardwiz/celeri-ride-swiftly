@@ -39,10 +39,14 @@ const SosButton = ({ rideId, role, className = "" }: Props) => {
         lat: pos?.lat ?? null,
         lng: pos?.lng ?? null,
       });
-      if (error) console.error("SOS error", error);
+      if (error) {
+        console.error("SOS error", error);
+        toast.error("Não foi possível avisar a central. Ligue 190 se estiver em perigo.");
+        return pos;
+      }
     }
     setSent(true);
-    toast.error("Alerta SOS enviado à central CELERI");
+    toast.success("Alerta SOS enviado à central CELERI");
     return pos;
   };
 

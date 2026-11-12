@@ -25,11 +25,15 @@ const Admin = () => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (!user) return;
-    supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }).then(({ data }) => {
-      setIsAdmin(!!data);
+    if (loading) return;
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }).then(({ data, error }) => {
+      setIsAdmin(!error && !!data);
     });
-  }, [user]);
+  }, [user, loading]);
 
   if (loading || isAdmin === null) {
     return (
