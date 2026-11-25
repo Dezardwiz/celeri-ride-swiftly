@@ -82,95 +82,111 @@ const RideStatusCard = ({ status, onAdvance, onComplete, onCancel, driver, etaMi
       <div className="mb-2 flex justify-end">
         <SosButton rideId={rideId} role="passenger" />
       </div>
-      <div className="rounded-lg border border-border bg-card overflow-hidden">
-        {/* Status bar */}
-        <div className="bg-input px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className={`h-2 w-2 rounded-full ${isInProgress ? "bg-primary animate-pulse" : "bg-success"}`} />
-            <span className={`font-display text-xs uppercase tracking-wider ${config.color}`}>
-              {config.label}
-            </span>
+      <div className="sheet-premium overflow-hidden">
+        <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-muted-foreground/30" />
+        {/* Status */}
+        <div className="flex items-center justify-between px-5 pt-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-60 ${isInProgress ? "bg-primary" : "bg-success"}`} />
+                <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${isInProgress ? "bg-primary" : "bg-success"}`} />
+              </span>
+              <span className={`font-display text-xs uppercase tracking-[0.18em] ${config.color}`}>{config.label}</span>
+            </div>
+            <p className="mt-1 text-lg font-semibold text-foreground">{sublabel}</p>
           </div>
-          <span className="text-xs text-muted-foreground">{sublabel}</span>
+          {etaMin != null && !isInProgress && status !== "arrived" && (
+            <div className="rounded-2xl border border-primary/30 bg-primary/10 px-3 py-1.5 text-center">
+              <p className="font-display text-2xl leading-none text-primary">{etaMin}</p>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">min</p>
+            </div>
+          )}
         </div>
 
-        {/* Driver info */}
-        <div className="p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        {/* Progress */}
+        <div className="flex gap-1.5 px-5 pt-3">
+          {(["accepted", "arrived", "in_progress", "done"] as const).map((s, i) => {
+            const idx = { accepted: 0, arriving: 0, arrived: 1, in_progress: 2 }[status];
+            return (
+              <div key={s} className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                <motion.div
+                  className="h-full rounded-full bg-gradient-to-r from-primary to-primary-glow"
+                  initial={{ width: 0 }}
+                  animate={{ width: i <= idx ? "100%" : "0%" }}
+                  transition={{ duration: 0.5, delay: i * 0.08 }}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="space-y-4 p-5">
+          {/* Driver */}
+          <div className="flex items-center gap-4">
+            <div className="avatar-ring shrink-0">
               {driver?.photo_url ? (
-                <img src={driver.photo_url} alt={driver.name} className="h-10 w-10 rounded-full object-cover" />
+                <img src={driver.photo_url} alt={driver.name} className="h-14 w-14 rounded-full border-2 border-card object-cover" />
               ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary font-display text-sm text-primary-foreground">
-                  {initials || <User size={16} />}
+                <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-card bg-secondary font-display text-lg text-primary">
+                  {initials || <User size={20} />}
                 </div>
               )}
-              <div>
-                <p className="text-sm font-medium text-foreground">{driver?.name ?? "Procurando mototaxista..."}</p>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <Star size={10} className="text-warning fill-warning" />
-                    <span className="text-xs text-muted-foreground">{(driver?.rating ?? 0).toFixed(1)}</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">·</span>
-                  <span className="text-xs text-muted-foreground">{driver?.plate ?? "—"}</span>
-                </div>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-base font-semibold text-foreground">{driver?.name ?? "Procurando mototaxista..."}</p>
+              <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Star size={12} className="fill-warning text-warning" />
+                <span className="font-medium text-foreground">{(driver?.rating ?? 0).toFixed(1)}</span>
+                <span>·</span>
+                <Navigation size={11} />
+                <span className="truncate">{driver?.moto_model ?? "—"}</span>
               </div>
             </div>
+            <span className="plate-badge shrink-0">{driver?.plate ?? "—"}</span>
+          </div>
 
-            <div className="flex gap-2">
-              {rideId && (
-                <button
-                  onClick={handleShare}
-                  title="Compartilhar corrida"
-                  className="rounded-full border border-border p-2 text-muted-foreground hover:bg-surface-hover transition-colors"
-                >
-                  <Share2 size={16} />
-                </button>
-              )}
-              {rideId && driver && (
-                <button
-                  onClick={() => setChatOpen(true)}
-                  title="Conversar com mototaxista"
-                  className="relative rounded-full border border-border p-2 text-muted-foreground hover:bg-surface-hover transition-colors"
-                >
-                  <MessageCircle size={16} />
+          {pinCode && status !== "in_progress" && (
+            <div className="flex items-center justify-between rounded-2xl border border-primary/40 bg-gradient-to-r from-primary/15 to-transparent px-4 py-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">PIN de segurança</p>
+                <p className="text-xs text-muted-foreground">Informe ao mototaxista</p>
+              </div>
+              <span className="font-display text-2xl tracking-[0.35em] text-primary">{pinCode}</span>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center justify-around">
+            {rideId && driver && (
+              <button onClick={() => setChatOpen(true)} className="flex flex-col items-center gap-1" aria-label="Conversar com mototaxista">
+                <span className="icon-btn relative">
+                  <MessageCircle size={18} />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-display text-primary-foreground">
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1 font-display text-[10px] text-primary-foreground">
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
-                </button>
-              )}
-              <button className="rounded-full border border-border p-2 text-muted-foreground hover:bg-surface-hover transition-colors">
-                <Phone size={16} />
+                </span>
+                <span className="text-[11px] text-muted-foreground">Chat</span>
               </button>
-            </div>
+            )}
+            <button className="flex flex-col items-center gap-1" aria-label="Ligar">
+              <span className="icon-btn"><Phone size={18} /></span>
+              <span className="text-[11px] text-muted-foreground">Ligar</span>
+            </button>
+            {rideId && (
+              <button onClick={handleShare} className="flex flex-col items-center gap-1" aria-label="Compartilhar corrida">
+                <span className="icon-btn"><Share2 size={18} /></span>
+                <span className="text-[11px] text-muted-foreground">Compartilhar</span>
+              </button>
+            )}
           </div>
 
-          <div className="flex gap-1">
-            {(["accepted", "arrived", "in_progress", "done"] as const).map((s, i) => {
-              const idx = { accepted: 0, arriving: 0, arrived: 1, in_progress: 2 }[status];
-              return <div key={s} className={`h-1 flex-1 rounded-full ${i <= idx ? "bg-primary" : "bg-muted"}`} />;
-            })}
-          </div>
-          {pinCode && status !== "in_progress" && (
-            <div className="flex items-center justify-between rounded-md border border-primary/40 bg-primary/10 px-3 py-2">
-              <span className="text-xs text-muted-foreground">Informe ao mototaxista</span>
-              <span className="font-display text-xl tracking-[0.35em] text-primary">{pinCode}</span>
-            </div>
-          )}
-          <div className="flex items-center gap-2 rounded-md bg-input px-3 py-2">
-            <Navigation size={12} className="text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">{driver?.moto_model ?? "—"}</span>
-            <span className="ml-auto text-xs font-medium text-foreground">{driver?.plate ?? "—"}</span>
-          </div>
-
-          {/* Action button */}
           {isInProgress ? (
             <button
               onClick={onComplete}
-              className="w-full rounded-md bg-primary py-3 font-display text-sm uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary/90"
+              className="press btn-glow w-full rounded-2xl bg-gradient-to-r from-primary to-primary-glow py-4 font-display text-sm uppercase tracking-wider text-primary-foreground"
             >
               Finalizar Corrida
             </button>
@@ -179,14 +195,14 @@ const RideStatusCard = ({ status, onAdvance, onComplete, onCancel, driver, etaMi
               {onCancel && (
                 <button
                   onClick={onCancel}
-                  className="flex items-center justify-center gap-1 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-3 font-display text-xs uppercase tracking-wider text-destructive transition-colors hover:bg-destructive/20"
+                  className="press flex items-center justify-center gap-1 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3.5 font-display text-xs uppercase tracking-wider text-destructive hover:bg-destructive/20"
                 >
                   <X size={14} /> Cancelar
                 </button>
               )}
               <button
                 onClick={onAdvance}
-                className="flex-1 rounded-md border border-border py-3 font-display text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:bg-surface-hover"
+                className="press flex-1 rounded-2xl border border-border py-3.5 font-display text-xs uppercase tracking-wider text-muted-foreground hover:bg-surface-hover"
               >
                 Simular Próximo Estado →
               </button>

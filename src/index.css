@@ -262,3 +262,23 @@
 .leaflet-tile-pane {
   filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9) saturate(0.35);
 }
+
+@layer components {
+  .sheet-premium {
+    @apply rounded-3xl border border-primary/20 bg-card/90 backdrop-blur-xl;
+    box-shadow: 0 -12px 40px -12px hsl(0 0% 0% / 0.7), inset 0 1px 0 hsl(var(--primary) / 0.15);
+  }
+  .plate-badge {
+    @apply inline-flex items-center rounded-md border border-primary/40 px-2.5 py-1 font-display text-sm tracking-[0.2em] text-foreground;
+    background: linear-gradient(180deg, hsl(var(--secondary)), hsl(var(--muted)));
+    box-shadow: inset 0 1px 0 hsl(var(--foreground) / 0.12), 0 2px 6px hsl(0 0% 0% / 0.4);
+  }
+  .press { @apply transition-transform duration-150 active:scale-95; }
+  .icon-btn {
+    @apply press flex h-11 w-11 items-center justify-center rounded-full border border-border bg-secondary text-foreground hover:border-primary/50 hover:text-primary;
+  }
+  .avatar-ring {
+    @apply rounded-full p-[2px];
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)), hsl(var(--primary) / 0.3));
+  }
+}
